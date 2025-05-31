@@ -1,6 +1,3 @@
-Here's the complete updated code for the AiRM Fateh Nano Drone platform with the new attractive purchase flow integrated into the existing system:
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1603,6 +1600,10 @@ Here's the complete updated code for the AiRM Fateh Nano Drone platform with the
         let freeAttempts = 5;
         let otp = '';
         const MASTER_LICENSE_KEY = "AIRM-MASTER-2024-CODE";
+        let currentPurchaseStep = 1;
+        let paymentMethod = 'upi';
+        let discountTimer = 300; // 5 minutes in seconds
+        let resendTimer = 30; // 30 seconds
 
         // Sample flight data for visualization
         const flightData = {
@@ -2734,580 +2735,577 @@ m_4 &= T - R - P - Y
         }
 
         function exportTrajectoryData() {
-    let csvContent = "Time (s),X Position (m),Y Position (m),Z Position (m)\n";
-    
-    for (let i = 0; i < trajectoryData.time.length; i++) {
-        csvContent += `${trajectoryData.time[i].toFixed(2)},${trajectoryData.x[i].toFixed(2)},${trajectoryData.y[i].toFixed(2)},${trajectoryData.z[i].toFixed(2)}\n`;
-    }
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'drone_trajectory_data.csv');
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-// Initialize the joystick functionality
-function initJoystick() {
-    const joystick = document.getElementById('joystick');
-    const container = document.querySelector('.joystick-container');
-    const containerRect = container.getBoundingClientRect();
-    const centerX = containerRect.width / 2;
-    const centerY = containerRect.height / 2;
-    const radius = containerRect.width / 2 - 30;
-    
-    interact(joystick).draggable({
-        restrict: {
-            restriction: container,
-            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
-            endOnly: true
-        },
-        onmove: function(event) {
-            const x = event.clientX - containerRect.left - centerX;
-            const y = event.clientY - containerRect.top - centerY;
-            const distance = Math.sqrt(x*x + y*y);
+            let csvContent = "Time (s),X Position (m),Y Position (m),Z Position (m)\n";
             
-            if (distance < radius) {
-                joystick.style.transform = `translate(${x}px, ${y}px)`;
-                joystickPosition = { x: x + centerX, y: y + centerY };
-            } else {
-                const angle = Math.atan2(y, x);
-                const limitedX = Math.cos(angle) * radius;
-                const limitedY = Math.sin(angle) * radius;
-                joystick.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
-                joystickPosition = { x: limitedX + centerX, y: limitedY + centerY };
+            for (let i = 0; i < trajectoryData.time.length; i++) {
+                csvContent += `${trajectoryData.time[i].toFixed(2)},${trajectoryData.x[i].toFixed(2)},${trajectoryData.y[i].toFixed(2)},${trajectoryData.z[i].toFixed(2)}\n`;
             }
             
-            // Calculate joystick position as percentage (-100 to 100)
-            const xPercent = Math.round((joystickPosition.x - centerX) / radius * 100);
-            const yPercent = Math.round((centerY - joystickPosition.y) / radius * 100);
-            
-            // Send control commands based on joystick position
-            if (isConnected) {
-                // This would be replaced with actual drone control commands
-                console.log(`Joystick position - X: ${xPercent}%, Y: ${yPercent}%`);
-            }
-        },
-        onend: function() {
-            // Return joystick to center when released
-            joystick.style.transform = 'translate(0, 0)';
-            joystickPosition = { x: centerX, y: centerY };
-            
-            // Send stop command when joystick is released
-            if (isConnected) {
-                console.log('Joystick centered - Stopping movement');
-            }
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'drone_trajectory_data.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
-    });
-}
 
-// Update slider value displays
-function updateSliderValues() {
-    document.getElementById('startXValue').textContent = document.getElementById('startX').value;
-    document.getElementById('startYValue').textContent = document.getElementById('startY').value;
-    document.getElementById('startZValue').textContent = document.getElementById('startZ').value;
-    document.getElementById('flightDurationValue').textContent = document.getElementById('flightDuration').value;
-    document.getElementById('maxSpeedValue').textContent = document.getElementById('maxSpeed').value;
-    document.getElementById('smoothnessValue').textContent = document.getElementById('smoothness').value;
-    document.getElementById('waypointX1Value').textContent = document.getElementById('waypointX1').value;
-    document.getElementById('waypointY1Value').textContent = document.getElementById('waypointY1').value;
-    document.getElementById('waypointZ1Value').textContent = document.getElementById('waypointZ1').value;
-    document.getElementById('waypointX2Value').textContent = document.getElementById('waypointX2').value;
-    document.getElementById('waypointY2Value').textContent = document.getElementById('waypointY2').value;
-    document.getElementById('waypointZ2Value').textContent = document.getElementById('waypointZ2').value;
-}
-
-// Update attempts counter display
-function updateAttemptsCounter() {
-    document.getElementById('attemptsLeft').textContent = freeAttempts;
-    if (freeAttempts <= 0 && !hasValidLicense) {
-        document.getElementById('attemptsCounter').style.borderColor = 'var(--error)';
-    }
-}
-
-// Build the drone firmware from selected blocks
-function buildFirmware() {
-    if (!hasValidLicense && freeAttempts <= 0) {
-        showLicenseModal();
-        return;
-    }
-    
-    // Check if at least the main loop is selected
-    const hasMainLoop = selectedBlocks.some(block => block.getAttribute('data-id') === 'run_main_loop');
-    if (!hasMainLoop) {
-        showStatusMessage('Error: Must include "Run Main Loop" block', true);
-        return;
-    }
-    
-    showStatusMessage('Building firmware...', false);
-    
-    // Generate main.cpp content from selected blocks
-    mainCpp = `// AiRM Fateh Nano Drone Firmware\n// Auto-generated by Math Learning Platform\n\n`;
-    
-    // Add includes and global variables
-    mainCpp += `#include <Arduino.h>\n#include "drone.h"\n\n`;
-    mainCpp += `// Global variables\nDrone drone;\nbool systemActive = true;\n\n`;
-    
-    // Add functions from selected blocks
-    selectedBlocks.forEach(block => {
-        const blockId = block.getAttribute('data-id');
-        mainCpp += blockData[blockId].code + '\n\n';
-    });
-    
-    // Add setup and loop functions
-    mainCpp += `void setup() {\n  Serial.begin(115200);\n  initializeSystem();\n}\n\n`;
-    mainCpp += `void loop() {\n  runMainLoop();\n}\n`;
-    
-    // Simulate build process
-    setTimeout(() => {
-        isBuilt = true;
-        showStatusMessage('Build successful! Ready to upload', false);
-        
-        // Decrement free attempts if not premium
-        if (!hasValidLicense) {
-            freeAttempts--;
-            updateAttemptsCounter();
-        }
-    }, 2000);
-}
-
-// Show status message with optional error styling
-function showStatusMessage(message, isError) {
-    const statusElement = document.getElementById('buildStatus');
-    const messageElement = document.getElementById('statusMessage');
-    
-    messageElement.textContent = message;
-    statusElement.className = isError ? 'error' : '';
-    
-    statusElement.classList.add('show');
-    setTimeout(() => {
-        statusElement.classList.add('fade-out');
-        setTimeout(() => {
-            statusElement.classList.remove('show', 'fade-out');
-        }, 500);
-    }, 3000);
-}
-
-// Connect to drone
-function connectToDrone() {
-    const droneId = document.getElementById('droneId').value;
-    const password = document.getElementById('dronePassword').value;
-    
-    if (!droneId || !password) {
-        document.getElementById('droneStatus').textContent = 'Status: ID and password required';
-        return;
-    }
-    
-    document.getElementById('droneStatus').textContent = 'Status: Connecting...';
-    
-    // Simulate connection process
-    setTimeout(() => {
-        isConnected = true;
-        document.getElementById('connectionIndicator').classList.remove('bg-red-500');
-        document.getElementById('connectionIndicator').classList.add('bg-green-500');
-        document.getElementById('connectionStatus').textContent = 'Connected';
-        document.getElementById('droneStatus').textContent = 'Status: Connected';
-    }, 1500);
-}
-
-// Upload code to drone
-function uploadCode() {
-    if (!isConnected) {
-        document.getElementById('uploadStatus').textContent = 'Upload Status: Not connected';
-        return;
-    }
-    
-    if (!isBuilt) {
-        document.getElementById('uploadStatus').textContent = 'Upload Status: Build firmware first';
-        return;
-    }
-    
-    document.getElementById('uploadStatus').textContent = 'Upload Status: Uploading...';
-    const progressBar = document.getElementById('uploadProgress');
-    
-    // Simulate upload process
-    let progress = 0;
-    const uploadInterval = setInterval(() => {
-        progress += 5;
-        progressBar.value = progress;
-        
-        if (progress >= 100) {
-            clearInterval(uploadInterval);
-            document.getElementById('uploadStatus').textContent = 'Upload Status: Upload complete!';
+        // Initialize the joystick functionality
+        function initJoystick() {
+            const joystick = document.getElementById('joystick');
+            const container = document.querySelector('.joystick-container');
+            const containerRect = container.getBoundingClientRect();
+            const centerX = containerRect.width / 2;
+            const centerY = containerRect.height / 2;
+            const radius = containerRect.width / 2 - 30;
             
-            // Decrement free attempts if not premium
-            if (!hasValidLicense) {
-                freeAttempts--;
-                updateAttemptsCounter();
-            }
-        }
-    }, 200);
-}
-
-// Handle tab switching in reverse learning modal
-function setupDataTabs() {
-    const tabs = document.querySelectorAll('.data-tab');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Remove active class from all tabs and content
-            document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            
-            // Add active class to clicked tab
-            tab.classList.add('active');
-            
-            // Show corresponding content
-            const tabId = tab.getAttribute('data-tab');
-            document.getElementById(`${tabId}-tab`).classList.add('active');
-            
-            // Initialize charts if needed
-            if (tabId === 'trajectory' && !trajectoryChart) {
-                initTrajectoryChart();
-            } else if (tabId === 'planning' && !plannedTrajectoryChart) {
-                initPlannedTrajectoryChart();
-            }
-        });
-    });
-}
-
-// Generate a random license key
-function generateLicenseKey() {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    let key = 'AIRM-';
-    
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 4; j++) {
-            key += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        if (i < 2) key += '-';
-    }
-    
-    return key;
-}
-
-// Purchase flow functionality
-let currentPurchaseStep = 1;
-let paymentMethod = 'upi';
-let discountTimer = 300; // 5 minutes in seconds
-let resendTimer = 30; // 30 seconds
-
-function updatePurchaseProgress() {
-    // Update step indicators
-    for (let i = 1; i <= 4; i++) {
-        const step = document.getElementById(`step${i}`);
-        if (i < currentPurchaseStep) {
-            step.classList.remove('active');
-            step.classList.add('completed');
-        } else if (i === currentPurchaseStep) {
-            step.classList.add('active');
-            step.classList.remove('completed');
-        } else {
-            step.classList.remove('active', 'completed');
-        }
-    }
-    
-    // Update progress bar
-    const progress = ((currentPurchaseStep - 1) / 3) * 100;
-    document.getElementById('progressFill').style.width = `${progress}%`;
-    
-    // Show/hide form sections
-    document.querySelectorAll('.form-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    document.getElementById(`formStep${currentPurchaseStep}`).classList.add('active');
-}
-
-function startDiscountTimer() {
-    const timerElement = document.getElementById('countdown');
-    
-    const timer = setInterval(() => {
-        const minutes = Math.floor(discountTimer / 60);
-        const seconds = discountTimer % 60;
-        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        
-        if (discountTimer <= 0) {
-            clearInterval(timer);
-            document.querySelector('.price-tag').textContent = '1998';
-            document.querySelector('.discount-badge').style.display = 'none';
-            document.getElementById('discountTimer').textContent = 'Offer expired';
-        } else {
-            discountTimer--;
-        }
-    }, 1000);
-}
-
-function startResendTimer() {
-    const timerElement = document.getElementById('resendCountdown');
-    document.getElementById('resendTimer').style.display = 'inline';
-    document.getElementById('resendOtp').style.display = 'none';
-    
-    const timer = setInterval(() => {
-        timerElement.textContent = resendTimer;
-        
-        if (resendTimer <= 0) {
-            clearInterval(timer);
-            document.getElementById('resendTimer').style.display = 'none';
-            document.getElementById('resendOtp').style.display = 'inline';
-            resendTimer = 30;
-        } else {
-            resendTimer--;
-        }
-    }, 1000);
-}
-
-function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-function validatePhone(phone) {
-    const re = /^\+?\d{10,15}$/;
-    return re.test(phone);
-}
-
-function createConfetti() {
-    const container = document.querySelector('.purchase-container');
-    const colors = ['#00f0ff', '#ff3e7f', '#ffff00', '#10b981'];
-    
-    for (let i = 0; i < 100; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = `${Math.random() * 100}%`;
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
-        
-        // Random size
-        const size = Math.random() * 10 + 5;
-        confetti.style.width = `${size}px`;
-        confetti.style.height = `${size}px`;
-        
-        // Animation
-        confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards, confetti-rotate ${Math.random() * 5 + 3}s linear infinite`;
-        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
-        
-        container.appendChild(confetti);
-        
-        // Remove after animation
-        setTimeout(() => {
-            confetti.remove();
-        }, 5000);
-    }
-}
-
-// Initialize all event listeners
-function setupEventListeners() {
-    // Block selection
-    document.querySelectorAll('.block').forEach(block => {
-        block.addEventListener('click', function(e) {
-            if (isDragging) return;
-            
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - lastTapTime;
-            
-            if (lastTappedBlock === this && tapLength < 300) {
-                // Double tap - toggle selection
-                if (this.classList.contains('selected')) {
-                    this.classList.remove('selected');
-                    selectedBlocks = selectedBlocks.filter(b => b !== this);
-                } else {
-                    this.classList.add('selected');
-                    selectedBlocks.push(this);
+            interact(joystick).draggable({
+                restrict: {
+                    restriction: container,
+                    elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+                    endOnly: true
+                },
+                onmove: function(event) {
+                    const x = event.clientX - containerRect.left - centerX;
+                    const y = event.clientY - containerRect.top - centerY;
+                    const distance = Math.sqrt(x*x + y*y);
+                    
+                    if (distance < radius) {
+                        joystick.style.transform = `translate(${x}px, ${y}px)`;
+                        joystickPosition = { x: x + centerX, y: y + centerY };
+                    } else {
+                        const angle = Math.atan2(y, x);
+                        const limitedX = Math.cos(angle) * radius;
+                        const limitedY = Math.sin(angle) * radius;
+                        joystick.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+                        joystickPosition = { x: limitedX + centerX, y: limitedY + centerY };
+                    }
+                    
+                    // Calculate joystick position as percentage (-100 to 100)
+                    const xPercent = Math.round((joystickPosition.x - centerX) / radius * 100);
+                    const yPercent = Math.round((centerY - joystickPosition.y) / radius * 100);
+                    
+                    // Send control commands based on joystick position
+                    if (isConnected) {
+                        // This would be replaced with actual drone control commands
+                        console.log(`Joystick position - X: ${xPercent}%, Y: ${yPercent}%`);
+                    }
+                },
+                onend: function() {
+                    // Return joystick to center when released
+                    joystick.style.transform = 'translate(0, 0)';
+                    joystickPosition = { x: centerX, y: centerY };
+                    
+                    // Send stop command when joystick is released
+                    if (isConnected) {
+                        console.log('Joystick centered - Stopping movement');
+                    }
                 }
-                updateArrows();
-                lastTapTime = 0;
-                lastTappedBlock = null;
-                clearTimeout(tapTimeout);
-            } else {
-                // Single tap - show modal after delay
-                lastTapTime = currentTime;
-                lastTappedBlock = this;
-                tapTimeout = setTimeout(() => {
-                    showModal(this);
-                    lastTapTime = 0;
-                    lastTappedBlock = null;
-                }, 300);
-            }
-        });
-    });
-    
-    // Modal close buttons
-    document.querySelectorAll('.close-modal').forEach(button => {
-        button.addEventListener('click', function() {
-            closeModal(this.closest('.modal').id);
-        });
-    });
-    
-    // Right-side buttons
-    document.getElementById('buildButton').addEventListener('click', buildFirmware);
-    document.getElementById('controlsButton').addEventListener('click', showControlsModal);
-    document.getElementById('connectButton').addEventListener('click', showConnectModal);
-    document.getElementById('tutorialButton').addEventListener('click', showTutorialModal);
-    document.getElementById('reverseLearningButton').addEventListener('click', showReverseLearningModal);
-    document.getElementById('licenseButton').addEventListener('click', showLicenseModal);
-    
-    // Connect modal buttons
-    document.getElementById('connectDroneButton').addEventListener('click', connectToDrone);
-    document.getElementById('uploadCodeButton').addEventListener('click', uploadCode);
-    
-    // Reverse learning modal elements
-    document.getElementById('dataType').addEventListener('change', updateDataDescription);
-    document.getElementById('generateGraph').addEventListener('click', generateGraph);
-    document.getElementById('zoomIn').addEventListener('click', zoomIn);
-    document.getElementById('zoomOut').addEventListener('click', zoomOut);
-    document.getElementById('exportData').addEventListener('click', exportData);
-    document.getElementById('exportTrajectory').addEventListener('click', exportTrajectoryData);
-    document.getElementById('uploadTrajectoryBtn').addEventListener('click', () => {
-        showStatusMessage('Trajectory uploaded to firmware', false);
-    });
-    
-    // Trajectory planning sliders
-    document.querySelectorAll('.control-slider input').forEach(slider => {
-        slider.addEventListener('input', function() {
-            const valueSpan = document.getElementById(`${this.id}Value`);
-            if (valueSpan) valueSpan.textContent = this.value;
-            updatePlannedTrajectory();
-        });
-    });
-    
-    // Purchase flow buttons
-    document.getElementById('nextBtn1').addEventListener('click', () => {
-        const fullName = document.getElementById('fullName').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        
-        if (!fullName || !email || !phone) {
-            alert('Please fill in all fields');
-            return;
+            });
         }
-        
-        if (!validateEmail(email)) {
-            alert('Please enter a valid email address');
-            return;
-        }
-        
-        if (!validatePhone(phone)) {
-            alert('Please enter a valid phone number');
-            return;
-        }
-        
-        // Generate and send OTP (simulated)
-        otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`OTP for ${phone}: ${otp}`); // In real app, this would send via SMS
-        
-        currentPurchaseStep = 2;
-        updatePurchaseProgress();
-        startResendTimer();
-    });
-    
-    document.getElementById('backBtn2').addEventListener('click', () => {
-        currentPurchaseStep = 1;
-        updatePurchaseProgress();
-    });
-    
-    document.getElementById('nextBtn2').addEventListener('click', () => {
-        // Verify OTP
-        const enteredOtp = Array.from(document.querySelectorAll('.otp-input'))
-            .map(input => input.value)
-            .join('');
-        
-        if (enteredOtp.length !== 6) {
-            alert('Please enter the full 6-digit code');
-            return;
-        }
-        
-        if (enteredOtp !== otp) {
-            alert('Incorrect verification code');
-            return;
-        }
-        
-        currentPurchaseStep = 3;
-        updatePurchaseProgress();
-    });
-    
-    document.getElementById('resendOtp').addEventListener('click', (e) => {
-        e.preventDefault();
-        // Resend OTP
-        otp = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`New OTP for ${document.getElementById('phone').value}: ${otp}`);
-        startResendTimer();
-    });
-    
-    document.getElementById('backBtn3').addEventListener('click', () => {
-        currentPurchaseStep = 2;
-        updatePurchaseProgress();
-    });
-    
-    document.getElementById('nextBtn3').addEventListener('click', () => {
-        // Process payment (simulated)
-        setTimeout(() => {
-            generatedLicenseKey = generateLicenseKey();
-            document.getElementById('licenseKeyDisplay').textContent = generatedLicenseKey;
-            
-            currentPurchaseStep = 4;
-            updatePurchaseProgress();
-            createConfetti();
-            
-            // Activate premium features
-            hasValidLicense = true;
-            document.getElementById('connectionIndicator').classList.remove('bg-red-500');
-            document.getElementById('connectionIndicator').classList.add('bg-green-500');
-            document.getElementById('connectionStatus').textContent = 'Premium Active';
-            document.getElementById('attemptsCounter').style.display = 'none';
-        }, 1500);
-    });
-    
-    document.getElementById('finishBtn').addEventListener('click', () => {
-        closeModal('licenseModal');
-    });
-    
-    // Payment method selection
-    document.querySelectorAll('.payment-option').forEach(option => {
-        option.addEventListener('click', () => {
-            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
-            paymentMethod = option.getAttribute('data-method');
-            
-            document.querySelectorAll('.payment-method').forEach(method => method.style.display = 'none');
-            document.getElementById(`${paymentMethod}Payment`).style.display = 'block';
-        });
-    });
-    
-    // OTP input auto-focus
-    document.querySelectorAll('.otp-input').forEach((input, index) => {
-        input.addEventListener('input', () => {
-            if (input.value.length === 1 && index < 5) {
-                document.querySelector(`.otp-input[data-index="${index + 1}"]`).focus();
-            }
-        });
-        
-        input.addEventListener('keydown', (e) => {
-            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
-                document.querySelector(`.otp-input[data-index="${index - 1}"]`).focus();
-            }
-        });
-    });
-}
 
-// Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    setupInteract();
-    setupEventListeners();
-    setupDataTabs();
-    initJoystick();
-    updateSliderValues();
-    updateAttemptsCounter();
-    startDiscountTimer();
-    
-    // Close modals when clicking outside content
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closeModal(modal.id);
+        // Update slider value displays
+        function updateSliderValues() {
+            document.getElementById('startXValue').textContent = document.getElementById('startX').value;
+            document.getElementById('startYValue').textContent = document.getElementById('startY').value;
+            document.getElementById('startZValue').textContent = document.getElementById('startZ').value;
+            document.getElementById('flightDurationValue').textContent = document.getElementById('flightDuration').value;
+            document.getElementById('maxSpeedValue').textContent = document.getElementById('maxSpeed').value;
+            document.getElementById('smoothnessValue').textContent = document.getElementById('smoothness').value;
+            document.getElementById('waypointX1Value').textContent = document.getElementById('waypointX1').value;
+            document.getElementById('waypointY1Value').textContent = document.getElementById('waypointY1').value;
+            document.getElementById('waypointZ1Value').textContent = document.getElementById('waypointZ1').value;
+            document.getElementById('waypointX2Value').textContent = document.getElementById('waypointX2').value;
+            document.getElementById('waypointY2Value').textContent = document.getElementById('waypointY2').value;
+            document.getElementById('waypointZ2Value').textContent = document.getElementById('waypointZ2').value;
+        }
+
+        // Update attempts counter display
+        function updateAttemptsCounter() {
+            document.getElementById('attemptsLeft').textContent = freeAttempts;
+            if (freeAttempts <= 0 && !hasValidLicense) {
+                document.getElementById('attemptsCounter').style.borderColor = 'var(--error)';
             }
+        }
+
+        // Build the drone firmware from selected blocks
+        function buildFirmware() {
+            if (!hasValidLicense && freeAttempts <= 0) {
+                showLicenseModal();
+                return;
+            }
+            
+            // Check if at least the main loop is selected
+            const hasMainLoop = selectedBlocks.some(block => block.getAttribute('data-id') === 'run_main_loop');
+            if (!hasMainLoop) {
+                showStatusMessage('Error: Must include "Run Main Loop" block', true);
+                return;
+            }
+            
+            showStatusMessage('Building firmware...', false);
+            
+            // Generate main.cpp content from selected blocks
+            mainCpp = `// AiRM Fateh Nano Drone Firmware\n// Auto-generated by Math Learning Platform\n\n`;
+            
+            // Add includes and global variables
+            mainCpp += `#include <Arduino.h>\n#include "drone.h"\n\n`;
+            mainCpp += `// Global variables\nDrone drone;\nbool systemActive = true;\n\n`;
+            
+            // Add functions from selected blocks
+            selectedBlocks.forEach(block => {
+                const blockId = block.getAttribute('data-id');
+                mainCpp += blockData[blockId].code + '\n\n';
+            });
+            
+            // Add setup and loop functions
+            mainCpp += `void setup() {\n  Serial.begin(115200);\n  initializeSystem();\n}\n\n`;
+            mainCpp += `void loop() {\n  runMainLoop();\n}\n`;
+            
+            // Simulate build process
+            setTimeout(() => {
+                isBuilt = true;
+                showStatusMessage('Build successful! Ready to upload', false);
+                
+                // Decrement free attempts if not premium
+                if (!hasValidLicense) {
+                    freeAttempts--;
+                    updateAttemptsCounter();
+                }
+            }, 2000);
+        }
+
+        // Show status message with optional error styling
+        function showStatusMessage(message, isError) {
+            const statusElement = document.getElementById('buildStatus');
+            const messageElement = document.getElementById('statusMessage');
+            
+            messageElement.textContent = message;
+            statusElement.className = isError ? 'error' : '';
+            
+            statusElement.classList.add('show');
+            setTimeout(() => {
+                statusElement.classList.add('fade-out');
+                setTimeout(() => {
+                    statusElement.classList.remove('show', 'fade-out');
+                }, 500);
+            }, 3000);
+        }
+
+        // Connect to drone
+        function connectToDrone() {
+            const droneId = document.getElementById('droneId').value;
+            const password = document.getElementById('dronePassword').value;
+            
+            if (!droneId || !password) {
+                document.getElementById('droneStatus').textContent = 'Status: ID and password required';
+                return;
+            }
+            
+            document.getElementById('droneStatus').textContent = 'Status: Connecting...';
+            
+            // Simulate connection process
+            setTimeout(() => {
+                isConnected = true;
+                document.getElementById('connectionIndicator').classList.remove('bg-red-500');
+                document.getElementById('connectionIndicator').classList.add('bg-green-500');
+                document.getElementById('connectionStatus').textContent = 'Connected';
+                document.getElementById('droneStatus').textContent = 'Status: Connected';
+            }, 1500);
+        }
+
+        // Upload code to drone
+        function uploadCode() {
+            if (!isConnected) {
+                document.getElementById('uploadStatus').textContent = 'Upload Status: Not connected';
+                return;
+            }
+            
+            if (!isBuilt) {
+                document.getElementById('uploadStatus').textContent = 'Upload Status: Build firmware first';
+                return;
+            }
+            
+            document.getElementById('uploadStatus').textContent = 'Upload Status: Uploading...';
+            const progressBar = document.getElementById('uploadProgress');
+            
+            // Simulate upload process
+            let progress = 0;
+            const uploadInterval = setInterval(() => {
+                progress += 5;
+                progressBar.value = progress;
+                
+                if (progress >= 100) {
+                    clearInterval(uploadInterval);
+                    document.getElementById('uploadStatus').textContent = 'Upload Status: Upload complete!';
+                    
+                    // Decrement free attempts if not premium
+                    if (!hasValidLicense) {
+                        freeAttempts--;
+                        updateAttemptsCounter();
+                    }
+                }
+            }, 200);
+        }
+
+        // Handle tab switching in reverse learning modal
+        function setupDataTabs() {
+            const tabs = document.querySelectorAll('.data-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and content
+                    document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                    
+                    // Initialize charts if needed
+                    if (tabId === 'trajectory' && !trajectoryChart) {
+                        initTrajectoryChart();
+                    } else if (tabId === 'planning' && !plannedTrajectoryChart) {
+                        initPlannedTrajectoryChart();
+                    }
+                });
+            });
+        }
+
+        // Generate a random license key
+        function generateLicenseKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let key = 'AIRM-';
+            
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 4; j++) {
+                    key += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                if (i < 2) key += '-';
+            }
+            
+            return key;
+        }
+
+        function updatePurchaseProgress() {
+            // Update step indicators
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                if (i < currentPurchaseStep) {
+                    step.classList.remove('active');
+                    step.classList.add('completed');
+                } else if (i === currentPurchaseStep) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+            }
+            
+            // Update progress bar
+            const progress = ((currentPurchaseStep - 1) / 3) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+            
+            // Show/hide form sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`formStep${currentPurchaseStep}`).classList.add('active');
+        }
+
+        function startDiscountTimer() {
+            const timerElement = document.getElementById('countdown');
+            
+            const timer = setInterval(() => {
+                const minutes = Math.floor(discountTimer / 60);
+                const seconds = discountTimer % 60;
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (discountTimer <= 0) {
+                    clearInterval(timer);
+                    document.querySelector('.price-tag').textContent = '1998';
+                    document.querySelector('.discount-badge').style.display = 'none';
+                    document.getElementById('discountTimer').textContent = 'Offer expired';
+                } else {
+                    discountTimer--;
+                }
+            }, 1000);
+        }
+
+        function startResendTimer() {
+            const timerElement = document.getElementById('resendCountdown');
+            document.getElementById('resendTimer').style.display = 'inline';
+            document.getElementById('resendOtp').style.display = 'none';
+            
+            const timer = setInterval(() => {
+                timerElement.textContent = resendTimer;
+                
+                if (resendTimer <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('resendTimer').style.display = 'none';
+                    document.getElementById('resendOtp').style.display = 'inline';
+                    resendTimer = 30;
+                } else {
+                    resendTimer--;
+                }
+            }, 1000);
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function validatePhone(phone) {
+            const re = /^\+?\d{10,15}$/;
+            return re.test(phone);
+        }
+
+        function createConfetti() {
+            const container = document.querySelector('.purchase-container');
+            const colors = ['#00f0ff', '#ff3e7f', '#ffff00', '#10b981'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = `${Math.random() * 100}%`;
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                
+                // Random size
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                
+                // Animation
+                confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards, confetti-rotate ${Math.random() * 5 + 3}s linear infinite`;
+                confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+                
+                container.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 5000);
+            }
+        }
+
+        // Initialize all event listeners
+        function setupEventListeners() {
+            // Block selection
+            document.querySelectorAll('.block').forEach(block => {
+                block.addEventListener('click', function(e) {
+                    if (isDragging) return;
+                    
+                    const currentTime = new Date().getTime();
+                    const tapLength = currentTime - lastTapTime;
+                    
+                    if (lastTappedBlock === this && tapLength < 300) {
+                        // Double tap - toggle selection
+                        if (this.classList.contains('selected')) {
+                            this.classList.remove('selected');
+                            selectedBlocks = selectedBlocks.filter(b => b !== this);
+                        } else {
+                            this.classList.add('selected');
+                            selectedBlocks.push(this);
+                        }
+                        updateArrows();
+                        lastTapTime = 0;
+                        lastTappedBlock = null;
+                        clearTimeout(tapTimeout);
+                    } else {
+                        // Single tap - show modal after delay
+                        lastTapTime = currentTime;
+                        lastTappedBlock = this;
+                        tapTimeout = setTimeout(() => {
+                            showModal(this);
+                            lastTapTime = 0;
+                            lastTappedBlock = null;
+                        }, 300);
+                    }
+                });
+            });
+            
+            // Modal close buttons
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', function() {
+                    closeModal(this.closest('.modal').id);
+                });
+            });
+            
+            // Right-side buttons
+            document.getElementById('buildButton').addEventListener('click', buildFirmware);
+            document.getElementById('controlsButton').addEventListener('click', showControlsModal);
+            document.getElementById('connectButton').addEventListener('click', showConnectModal);
+            document.getElementById('tutorialButton').addEventListener('click', showTutorialModal);
+            document.getElementById('reverseLearningButton').addEventListener('click', showReverseLearningModal);
+            document.getElementById('licenseButton').addEventListener('click', showLicenseModal);
+            
+            // Connect modal buttons
+            document.getElementById('connectDroneButton').addEventListener('click', connectToDrone);
+            document.getElementById('uploadCodeButton').addEventListener('click', uploadCode);
+            
+            // Reverse learning modal elements
+            document.getElementById('dataType').addEventListener('change', updateDataDescription);
+            document.getElementById('generateGraph').addEventListener('click', generateGraph);
+            document.getElementById('zoomIn').addEventListener('click', zoomIn);
+            document.getElementById('zoomOut').addEventListener('click', zoomOut);
+            document.getElementById('exportData').addEventListener('click', exportData);
+            document.getElementById('exportTrajectory').addEventListener('click', exportTrajectoryData);
+            document.getElementById('uploadTrajectoryBtn').addEventListener('click', () => {
+                showStatusMessage('Trajectory uploaded to firmware', false);
+            });
+            
+            // Trajectory planning sliders
+            document.querySelectorAll('.control-slider input').forEach(slider => {
+                slider.addEventListener('input', function() {
+                    const valueSpan = document.getElementById(`${this.id}Value`);
+                    if (valueSpan) valueSpan.textContent = this.value;
+                    updatePlannedTrajectory();
+                });
+            });
+            
+            // Purchase flow buttons
+            document.getElementById('nextBtn1').addEventListener('click', () => {
+                const fullName = document.getElementById('fullName').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                
+                if (!fullName || !email || !phone) {
+                    alert('Please fill in all fields');
+                    return;
+                }
+                
+                if (!validateEmail(email)) {
+                    alert('Please enter a valid email address');
+                    return;
+                }
+                
+                if (!validatePhone(phone)) {
+                    alert('Please enter a valid phone number');
+                    return;
+                }
+                
+                // Generate and send OTP (simulated)
+                otp = Math.floor(100000 + Math.random() * 900000).toString();
+                console.log(`OTP for ${phone}: ${otp}`); // In real app, this would send via SMS
+                
+                currentPurchaseStep = 2;
+                updatePurchaseProgress();
+                startResendTimer();
+            });
+            
+            document.getElementById('backBtn2').addEventListener('click', () => {
+                currentPurchaseStep = 1;
+                updatePurchaseProgress();
+            });
+            
+            document.getElementById('nextBtn2').addEventListener('click', () => {
+                // Verify OTP
+                const enteredOtp = Array.from(document.querySelectorAll('.otp-input'))
+                    .map(input => input.value)
+                    .join('');
+                
+                if (enteredOtp.length !== 6) {
+                    alert('Please enter the full 6-digit code');
+                    return;
+                }
+                
+                if (enteredOtp !== otp) {
+                    alert('Incorrect verification code');
+                    return;
+                }
+                
+                currentPurchaseStep = 3;
+                updatePurchaseProgress();
+            });
+            
+            document.getElementById('resendOtp').addEventListener('click', (e) => {
+                e.preventDefault();
+                // Resend OTP
+                otp = Math.floor(100000 + Math.random() * 900000).toString();
+                console.log(`New OTP for ${document.getElementById('phone').value}: ${otp}`);
+                startResendTimer();
+            });
+            
+            document.getElementById('backBtn3').addEventListener('click', () => {
+                currentPurchaseStep = 2;
+                updatePurchaseProgress();
+            });
+            
+            document.getElementById('nextBtn3').addEventListener('click', () => {
+                // Process payment (simulated)
+                setTimeout(() => {
+                    generatedLicenseKey = generateLicenseKey();
+                    document.getElementById('licenseKeyDisplay').textContent = generatedLicenseKey;
+                    
+                    currentPurchaseStep = 4;
+                    updatePurchaseProgress();
+                    createConfetti();
+                    
+                    // Activate premium features
+                    hasValidLicense = true;
+                    document.getElementById('connectionIndicator').classList.remove('bg-red-500');
+                    document.getElementById('connectionIndicator').classList.add('bg-green-500');
+                    document.getElementById('connectionStatus').textContent = 'Premium Active';
+                    document.getElementById('attemptsCounter').style.display = 'none';
+                }, 1500);
+            });
+            
+            document.getElementById('finishBtn').addEventListener('click', () => {
+                closeModal('licenseModal');
+            });
+            
+            // Payment method selection
+            document.querySelectorAll('.payment-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    paymentMethod = option.getAttribute('data-method');
+                    
+                    document.querySelectorAll('.payment-method').forEach(method => method.style.display = 'none');
+                    document.getElementById(`${paymentMethod}Payment`).style.display = 'block';
+                });
+            });
+            
+            // OTP input auto-focus
+            document.querySelectorAll('.otp-input').forEach((input, index) => {
+                input.addEventListener('input', () => {
+                    if (input.value.length === 1 && index < 5) {
+                        document.querySelector(`.otp-input[data-index="${index + 1}"]`).focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                        document.querySelector(`.otp-input[data-index="${index - 1}"]`).focus();
+                    }
+                });
+            });
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            setupInteract();
+            setupEventListeners();
+            setupDataTabs();
+            initJoystick();
+            updateSliderValues();
+            updateAttemptsCounter();
+            startDiscountTimer();
+            
+            // Close modals when clicking outside content
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        closeModal(modal.id);
+                    }
+                });
+            });
         });
-    });
-});
+    </script>
+</body>
+</html>
