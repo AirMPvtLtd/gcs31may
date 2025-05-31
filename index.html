@@ -1,0 +1,3313 @@
+Here's the complete updated code for the AiRM Fateh Nano Drone platform with the new attractive purchase flow integrated into the existing system:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AiRM Fateh Nano Drone: Math Learning Platform</title>
+    <style>
+        *, ::before, ::after { box-sizing: border-box; }
+        body { margin: 0; }
+        .flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .p-4 { padding: 1rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .font-bold { font-weight: 700; }
+        .rounded { border-radius: 0.25rem; }
+        .mr-2 { margin-right: 0.5rem; }
+        .w-3 { width: 0.75rem; }
+        .h-3 { height: 0.75rem; }
+        .rounded-full { border-radius: 9999px; }
+        .bg-green-500 { background-color: #10b981; }
+        .bg-red-500 { background-color: #ef4444; }
+        .fixed { position: fixed; }
+        .z-50 { z-index: 50; }
+
+        :root {
+            --primary: #00f0ff;
+            --secondary: #ff3e7f;
+            --dark: #0a0a1a;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+        }
+        body {
+            background: #000;
+            font-family: 'Share Tech Mono', monospace;
+            color: #e0e0ff;
+            margin: 0;
+        }
+        .canvas {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            min-height: 1200px;
+            background: #000;
+            overflow-y: auto;
+        }
+        .grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0, 240, 255, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 240, 255, 0.1) 1px, transparent 1px);
+            background-size: 10px 10px;
+            pointer-events: none;
+        }
+        .block {
+            position: absolute;
+            width: 250px;
+            height: 100px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+            color: var(--primary);
+            padding: 10px;
+            cursor: move;
+            transition: transform 0.2s ease;
+            user-select: none;
+            touch-action: manipulation;
+            pointer-events: auto;
+        }
+        .block:hover {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.7);
+        }
+        .block.active {
+            z-index: 100;
+            border-color: var(--secondary);
+            box-shadow: 0 0 25px rgba(255, 62, 127, 0.7);
+        }
+        .block.selected {
+            border-color: #ffff00;
+            box-shadow: 0 0 20px rgba(255, 255, 0, 0.7);
+        }
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 200;
+            background: rgba(0, 0, 0, 0.8);
+        }
+        .arrow {
+            position: absolute;
+            z-index: 10;
+            pointer-events: none;
+            overflow: visible;
+            transform-box: fill-box;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 300;
+            justify-content: center;
+            align-items: center;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: rgba(0, 240, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--primary);
+            border-radius: 12px;
+            padding: 20px;
+            width: 70vw;
+            height: 80vh;
+            color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.5);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            margin: 0 0 10px;
+            font-size: 1.25rem;
+        }
+        .modal-section {
+            flex: 1;
+            padding: 10px;
+        }
+        .modal-section textarea {
+            width: 100%;
+            height: 80%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.875rem;
+            padding: 10px;
+            resize: none;
+            border-radius: 4px;
+        }
+        .modal-section .equations {
+            font-size: 0.875rem;
+            color: var(--primary);
+        }
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.5rem;
+            color: var(--primary);
+            cursor: pointer;
+            background: none;
+            border: none;
+            transition: color 0.2s;
+        }
+        .close-modal:hover {
+            color: var(--secondary);
+        }
+        #buildButton, #controlsButton, #connectButton, #tutorialButton, #reverseLearningButton, #licenseButton {
+            position: fixed;
+            right: 20px;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            z-index: 200;
+            transition: background 0.2s, box-shadow 0.2s;
+            width: 150px;
+            text-align: center;
+        }
+        #buildButton {
+            top: calc(50% - 150px);
+            transform: translateY(-50%);
+        }
+        #controlsButton {
+            top: calc(50% - 75px);
+            transform: translateY(-50%);
+        }
+        #connectButton {
+            top: calc(50%);
+            transform: translateY(-50%);
+        }
+        #tutorialButton {
+            top: calc(50% + 75px);
+            transform: translateY(-50%);
+        }
+        #reverseLearningButton {
+            top: calc(50% + 150px);
+            transform: translateY(-50%);
+        }
+        #licenseButton {
+            top: calc(50% + 225px);
+            transform: translateY(-50%);
+        }
+        #buildButton:hover, #controlsButton:hover, #connectButton:hover, #tutorialButton:hover, #reverseLearningButton:hover, #licenseButton:hover {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+        }
+        #buildStatus {
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            color: #10b981;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.25rem;
+            text-align: center;
+            padding: 10px 0;
+            z-index: 250;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        #buildStatus.error {
+            color: #ef4444;
+        }
+        #buildStatus.show {
+            opacity: 1;
+        }
+        #buildStatus.fade-out {
+            opacity: 0;
+        }
+        #deepDiveButton {
+            display: none;
+            margin: 10px auto;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+        }
+        #deepDiveButton:hover {
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+        }
+        .trajectory-container {
+            width: 100%;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            margin-top: 15px;
+            position: relative;
+        }
+        .trajectory-header {
+            padding: 5px 10px;
+            background: rgba(0, 240, 255, 0.2);
+            border-bottom: 1px solid var(--primary);
+            font-size: 0.875rem;
+        }
+        .trajectory-canvas {
+            width: 100%;
+            height: calc(100% - 30px);
+        }
+        .data-tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        .data-tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .data-tab.active {
+            border-bottom: 2px solid var(--primary);
+            background: rgba(0, 240, 255, 0.1);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .data-description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.875rem;
+        }
+        .control-panel {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .control-btn {
+            background: rgba(0, 240, 255, 0.1);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .control-btn:hover {
+            background: rgba(0, 240, 255, 0.3);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+        }
+        .control-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        .joystick-container {
+            width: 200px;
+            height: 200px;
+            position: relative;
+            margin: 20px auto;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+        .joystick {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 62, 127, 0.7);
+            border-radius: 50%;
+            position: absolute;
+            top: 70px;
+            left: 70px;
+            cursor: move;
+            touch-action: none;
+        }
+        .trajectory-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .trajectory-control-group {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .trajectory-control-group h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        .control-slider {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .control-slider label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+        .control-slider input {
+            width: 100%;
+        }
+        .upload-trajectory-btn {
+            background: rgba(0, 240, 255, 0.2);
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: block;
+            margin: 20px auto 0;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .upload-trajectory-btn:hover {
+            background: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+        }
+        .glass-effect {
+            background: rgba(0, 240, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+            padding: 20px;
+        }
+        .license-key-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .license-key-form input {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+        .license-key-form button {
+            background: rgba(0, 240, 255, 0.2);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono', monospace;
+            transition: all 0.2s;
+        }
+        .license-key-form button:hover {
+            background: rgba(0, 240, 255, 0.4);
+        }
+        .otp-section {
+            display: none;
+        }
+        .payment-section {
+            display: none;
+        }
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .payment-success {
+            display: none;
+            text-align: center;
+        }
+        .license-key-display {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            text-align: center;
+            margin-top: 15px;
+            word-break: break-all;
+        }
+        .otp-input-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .otp-input {
+            width: 40px;
+            height: 40px;
+            text-align: center;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 4px;
+        }
+        .attempts-counter {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            z-index: 200;
+        }
+
+        /* New Purchase Flow Styles */
+        .purchase-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(10, 10, 26, 0.8);
+            border: 2px solid var(--primary);
+            border-radius: 16px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .purchase-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0, 240, 255, 0.1) 0%, transparent 70%);
+            z-index: -1;
+            animation: pulse 8s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .purchase-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .purchase-header h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .purchase-header p {
+            color: rgba(224, 224, 255, 0.8);
+            font-size: 1rem;
+        }
+        
+        .purchase-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 2px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            transition: all 0.3s ease;
+        }
+        
+        .step.active .step-number {
+            background: var(--primary);
+            color: var(--dark);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.7);
+        }
+        
+        .step.completed .step-number {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .step-label {
+            font-size: 0.9rem;
+            color: rgba(224, 224, 255, 0.7);
+        }
+        
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .step.completed .step-label {
+            color: var(--success);
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            width: 80%;
+            height: 4px;
+            background: rgba(0, 240, 255, 0.1);
+            z-index: 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+        
+        .purchase-form {
+            margin-top: 2rem;
+        }
+        
+        .form-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--dark);
+            border: none;
+            border-radius: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 240, 255, 0.4);
+        }
+        
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(0, 240, 255, 0.1);
+        }
+        
+        .otp-inputs {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+        }
+        
+        .otp-input {
+            width: 50px;
+            height: 60px;
+            text-align: center;
+            font-size: 1.5rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 8px;
+            color: white;
+            margin: 0 5px;
+            transition: all 0.3s ease;
+        }
+        
+        .otp-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+            outline: none;
+        }
+        
+        .payment-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        
+        .payment-option {
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .payment-option:hover {
+            border-color: var(--primary);
+            background: rgba(0, 240, 255, 0.1);
+        }
+        
+        .payment-option.selected {
+            border-color: var(--primary);
+            background: rgba(0, 240, 255, 0.2);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+        
+        .payment-option i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+        
+        .qr-code-container {
+            text-align: center;
+            margin: 2rem 0;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        .success-message {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .success-message i {
+            font-size: 4rem;
+            color: var(--success);
+            margin-bottom: 1rem;
+            animation: bounce 1s infinite alternate;
+        }
+        
+        @keyframes bounce {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-10px); }
+        }
+        
+        .license-key {
+            background: rgba(0, 240, 255, 0.1);
+            border: 1px solid var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: monospace;
+            text-align: center;
+            margin: 1.5rem 0;
+            word-break: break-all;
+            font-size: 1.2rem;
+            color: var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .license-key::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.2), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            100% { left: 100%; }
+        }
+        
+        .price-tag {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            margin: 1rem 0;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .price-tag::before {
+            content: '₹';
+            font-size: 1.5rem;
+            vertical-align: super;
+            margin-right: 5px;
+        }
+        
+        .features-list {
+            margin: 1.5rem 0;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding: 0.8rem;
+            background: rgba(0, 240, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-item:hover {
+            background: rgba(0, 240, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .feature-item i {
+            margin-right: 1rem;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+        
+        .timer {
+            text-align: center;
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            color: var(--secondary);
+        }
+        
+        .discount-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--secondary);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transform: rotate(15deg);
+            box-shadow: 0 2px 10px rgba(255, 62, 127, 0.5);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            opacity: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .purchase-container {
+                padding: 1rem;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+            }
+            
+            .purchase-steps {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .step {
+                margin-bottom: 1rem;
+            }
+            
+            .progress-bar {
+                display: none;
+            }
+            
+            .payment-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .otp-inputs {
+                justify-content: center;
+            }
+            
+            .otp-input {
+                width: 40px;
+                height: 50px;
+                margin: 0 3px;
+            }
+        }
+
+        /* Confetti animation */
+        @keyframes confetti-fall {
+            0% { 
+                opacity: 1;
+                top: -10px;
+            }
+            100% { 
+                opacity: 0;
+                top: 100vh;
+            }
+        }
+        @keyframes confetti-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://unpkg.com/interactjs@1.10.27/dist/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="header p-4 flex justify-between items-center">
+        <div>
+            <h1 class="text-2xl" style="color: var(--primary);">AiRM FATEH NANO DRONE</h1>
+            <h2 class="text-lg" style="color: var(--secondary);">MATH LEARNING PLATFORM</h2>
+        </div>
+        <div class="flex items-center">
+            <div id="connectionIndicator" class="w-3 h-3 rounded-full mr-2 bg-red-500"></div>
+            <span class="text-sm" id="connectionStatus">Disconnected</span>
+        </div>
+    </div>
+    <div class="canvas">
+        <div class="grid"></div>
+        <svg class="arrow" width="100%" height="100%">
+            <defs>
+                <marker id="arrowhead" markerWidth="15" markerHeight="10" refX="8" refY="5" orient="auto" markerUnits="strokeWidth">
+                    <polygon points="0 0, 15 5, 0 10" fill="#ffff00" />
+                </marker>
+            </defs>
+        </svg>
+        <div class="block" data-id="initialize_system" style="left: 50px; top: 100px;">
+            <h3 class="text-sm font-bold">Initialize System</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="log_data" style="left: 50px; top: 180px;">
+            <h3 class="text-sm font-bold">Log Data</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="read_sensor_data" style="left: 50px; top: 260px;">
+            <h3 class="text-sm font-bold">Read Sensor Data</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="calibrate_sensor" style="left: 50px; top: 340px;">
+            <h3 class="text-sm font-bold">Calibrate Sensor</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="fuse_sensor_data" style="left: 50px; top: 420px;">
+            <h3 class="text-sm font-bold">Fuse Sensor Data</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="set_control_targets" style="left: 50px; top: 500px;">
+            <h3 class="text-sm font-bold">Set Control Targets</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="compute_pid_control" style="left: 50px; top: 580px;">
+            <h3 class="text-sm font-bold">Compute PID Control</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="auto_tune_pid" style="left: 50px; top: 660px;">
+            <h3 class="text-sm font-bold">Auto-Tune PID</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="drive_motors" style="left: 50px; top: 740px;">
+            <h3 class="text-sm font-bold">Drive Motors</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="calibrate_motor_trim" style="left: 50px; top: 820px;">
+            <h3 class="text-sm font-bold">Calibrate Motor Trim</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="handle_communication" style="left: 50px; top: 900px;">
+            <h3 class="text-sm font-bold">Handle Communication</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="monitor_battery" style="left: 50px; top: 980px;">
+            <h3 class="text-sm font-bold">Monitor Battery</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+        <div class="block" data-id="run_main_loop" style="left: 50px; top: 1060px;">
+            <h3 class="text-sm font-bold">Run Main Loop</h3>
+            <p class="text-xs">Status: Active</p>
+        </div>
+    </div>
+    <div style="position: fixed; top: 50%; left: 0; width: 100vw; text-align: center; transform: translateY(-50%); font-family: 'Share Tech Mono', monospace; font-size: 10rem; color: var(--primary); opacity: 0.1; pointer-events: none; z-index: 150;">AIRM</div>
+    
+    <!-- Right-side buttons with consistent width -->
+    <button id="buildButton">Build</button>
+    <button id="controlsButton">Controls</button>
+    <button id="connectButton">Connect</button>
+    <button id="tutorialButton">Tutorial</button>
+    <button id="reverseLearningButton">Reverse Learning</button>
+    <button id="licenseButton">License Key</button>
+    
+    <div id="buildStatus">
+        <span id="statusMessage"></span>
+        <button id="deepDiveButton">Deep Dive</button>
+    </div>
+    
+    <div class="attempts-counter" id="attemptsCounter">
+        Free Attempts Left: <span id="attemptsLeft">5</span>
+    </div>
+    
+    <!-- Modals -->
+    <div class="modal" id="blockModal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <div class="modal-section">
+                <h3 id="modalTitle"></h3>
+                <textarea id="modalCode"></textarea>
+            </div>
+            <div class="modal-section">
+                <h3>Equations</h3>
+                <div class="equations" id="modalEquations"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="controlsModal">
+        <div class="modal-content glass-effect">
+            <button class="close-modal">×</button>
+            <h3>Drone Control Panel</h3>
+            
+            <div class="control-panel">
+                <div class="control-btn" id="takeoffBtn">
+                    <i class="fas fa-rocket"></i>
+                    Takeoff
+                </div>
+                <div class="control-btn" id="landBtn">
+                    <i class="fas fa-landmark"></i>
+                    Land
+                </div>
+                <div class="control-btn" id="emergencyBtn">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Emergency Stop
+                </div>
+                <div class="control-btn" id="hoverBtn">
+                    <i class="fas fa-pause"></i>
+                    Hover
+                </div>
+                <div class="control-btn" id="forwardBtn">
+                    <i class="fas fa-arrow-up"></i>
+                    Forward
+                </div>
+                <div class="control-btn" id="backwardBtn">
+                    <i class="fas fa-arrow-down"></i>
+                    Backward
+                </div>
+                <div class="control-btn" id="leftBtn">
+                    <i class="fas fa-arrow-left"></i>
+                    Left
+                </div>
+                <div class="control-btn" id="rightBtn">
+                    <i class="fas fa-arrow-right"></i>
+                    Right
+                </div>
+                <div class="control-btn" id="rotateLeftBtn">
+                    <i class="fas fa-undo"></i>
+                    Rotate Left
+                </div>
+                <div class="control-btn" id="rotateRightBtn">
+                    <i class="fas fa-redo"></i>
+                    Rotate Right
+                </div>
+                <div class="control-btn" id="flipBtn">
+                    <i class="fas fa-sync-alt"></i>
+                    Flip
+                </div>
+                <div class="control-btn" id="photoBtn">
+                    <i class="fas fa-camera"></i>
+                    Take Photo
+                </div>
+            </div>
+            
+            <div class="joystick-container">
+                <div class="joystick" id="joystick"></div>
+            </div>
+            
+            <div style="text-align: center;">
+                <label class="text-sm">Throttle: <span id="throttleValue">0</span>%</label>
+                <input type="range" id="throttleSlider" min="0" max="100" value="0" style="width: 80%;">
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="connectModal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h3>Connect to Drone</h3>
+            <div class="modal-section">
+                <label class="text-sm">Drone ID:</label>
+                <input type="text" id="droneId" placeholder="Enter Drone ID" style="width: 100%; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--primary); color: var(--primary); padding: 5px; margin-bottom: 10px;">
+                <label class="text-sm">Password:</label>
+                <input type="password" id="dronePassword" placeholder="Enter Password" style="width: 100%; background: rgba(0, 0, 0, 0.5); border: 1px solid var(--primary); color: var(--primary); padding: 5px; margin-bottom: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <button id="connectDroneButton" style="margin-top: 10px;">Connect</button>
+                    <button id="uploadCodeButton" style="margin-top: 10px;">Upload</button>
+                </div>
+                <p class="text-sm" id="droneStatus" style="margin-top: 10px;">Status: Disconnected</p>
+                <progress id="uploadProgress" value="0" max="100" style="width: 100%; margin-top: 10px; background: rgba(0, 0, 0, 0.5); color: var(--primary);"></progress>
+                <p class="text-sm" id="uploadStatus" style="margin-top: 10px;">Upload Status: None</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="tutorialModal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h3>Tutorial: How to Use the AiRM Fateh Nano Drone Platform</h3>
+            <div class="modal-section" style="padding: 10px;">
+                <p>Welcome to the AiRM Fateh Nano Drone Math Learning Platform. This interactive tool allows you to:</p>
+                <ol>
+                    <li>Explore drone firmware components through visual blocks</li>
+                    <li>Connect to a physical drone (if available)</li>
+                    <li>Control the drone's flight and view real-time data</li>
+                    <li>Analyze flight data with interactive graphs</li>
+                    <li>Plan and visualize flight trajectories</li>
+                </ol>
+                <h4>Getting Started:</h4>
+                <p>1. Click on any block to view its code and mathematical equations</p>
+                <p>2. Use the "Build" button to compile the drone firmware</p>
+                <p>3. Connect to your drone using the "Connect" button</p>
+                <p>4. Use the "Controls" panel to fly the drone</p>
+                <p>5. View flight data and analyze it with the "Reverse Learning" tools</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal" id="reverseLearningModal">
+        <div class="modal-content">
+            <button class="close-modal">×</button>
+            <h3>Reverse Learning Analysis</h3>
+            
+            <div class="data-tabs">
+                <div class="data-tab active" data-tab="graphs">Graphs</div>
+                <div class="data-tab" data-tab="trajectory">Flight Trajectory</div>
+                <div class="data-tab" data-tab="planning">Trajectory Planning</div>
+            </div>
+            
+            <div class="tab-content active" id="graphs-tab">
+                <div class="modal-section">
+                    <h4>Select Data to Visualize</h4>
+                    <select id="dataType" style="width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.5); color: var(--primary); border: 1px solid var(--primary); padding: 5px;">
+                        <option value="altitude">Altitude (Physics Grade 8-10)</option>
+                        <option value="velocity">Velocity (Physics Grade 9-11)</option>
+                        <option value="acceleration">Acceleration (Physics Grade 10-12)</option>
+                        <option value="angles">Orientation Angles (Math Grade 9-12)</option>
+                        <option value="motor">Motor Speeds (Physics Grade 8-10)</option>
+                        <option value="battery">Battery Usage (Math Grade 7-9)</option>
+                    </select>
+                    <div class="data-description" id="dataDescription">
+                        <p>Altitude shows the drone's height over time (in meters). Analyze the rate of change to understand velocity and acceleration.</p>
+                    </div>
+                    <button id="generateGraph" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 4px; cursor: pointer;">Generate Graph</button>
+                    <div style="margin-top: 15px;">
+                        <h4>Math Concepts</h4>
+                        <ul id="mathConcepts" style="font-size: 0.8rem;">
+                            <li>Linear functions (y = mx + b)</li>
+                            <li>Rate of change (slope)</li>
+                            <li>Area under curve</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <h4>Physics Concepts</h4>
+                        <ul id="physicsConcepts" style="font-size: 0.8rem;">
+                            <li>Kinematics</li>
+                            <li>Newton's laws of motion</li>
+                            <li>Energy conservation</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-section" style="flex: 2; display: flex; flex-direction: column;">
+                    <div id="graphContainer" style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--primary); position: relative;">
+                        <canvas id="dataGraph" style="width: 100%; height: 100%;"></canvas>
+                    </div>
+                    <div id="graphControls" style="margin-top: 10px; display: flex; gap: 10px;">
+                        <button id="zoomIn" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">Zoom In</button>
+                        <button id="zoomOut" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">Zoom Out</button>
+                        <button id="exportData" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 5px 10px; border-radius: 4px; cursor: pointer;">Export Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="trajectory-tab">
+                <div class="modal-section">
+                    <h4>Flight Trajectory Analysis</h4>
+                    <div class="data-description">
+                        <p>This 2D visualization shows the drone's flight path from the last recorded flight. 
+                        The X and Y axes represent horizontal movement, while altitude (Z) is shown in the tooltip. 
+                        Analyze the path to understand flight patterns and stability.</p>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <h4>Math Concepts</h4>
+                        <ul style="font-size: 0.8rem;">
+                            <li>Coordinate geometry</li>
+                            <li>Vector mathematics</li>
+                            <li>Parametric equations</li>
+                        </ul>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <h4>Physics Concepts</h4>
+                        <ul style="font-size: 0.8rem;">
+                            <li>Projectile motion</li>
+                            <li>Velocity vectors</li>
+                            <li>Trajectory optimization</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <div class="trajectory-container">
+                        <div class="trajectory-header">Flight Path Visualization</div>
+                        <canvas class="trajectory-canvas" id="trajectoryCanvas"></canvas>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button id="exportTrajectory" style="background: rgba(0, 240, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 4px; cursor: pointer;">Export Trajectory Data</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="planning-tab">
+                <div class="modal-section">
+                    <h4>Trajectory Planning</h4>
+                    <div class="data-description">
+                        <p>Plan your drone's flight path by adjusting the parameters below. The graph will update in real-time to show the planned trajectory. 
+                        Once satisfied, upload the trajectory to the drone's firmware.</p>
+                    </div>
+                    
+                    <div class="trajectory-controls">
+                        <div class="trajectory-control-group">
+                            <h4>Position Parameters</h4>
+                            <div class="control-slider">
+                                <label for="startX">Start X (m): <span id="startXValue">0</span></label>
+                                <input type="range" id="startX" min="-10" max="10" value="0" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="startY">Start Y (m): <span id="startYValue">0</span></label>
+                                <input type="range" id="startY" min="-10" max="10" value="0" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="startZ">Start Z (m): <span id="startZValue">1</span></label>
+                                <input type="range" id="startZ" min="0" max="5" value="1" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="trajectory-control-group">
+                            <h4>Flight Parameters</h4>
+                            <div class="control-slider">
+                                <label for="flightDuration">Duration (s): <span id="flightDurationValue">5</span></label>
+                                <input type="range" id="flightDuration" min="1" max="20" value="5" step="0.5">
+                            </div>
+                            <div class="control-slider">
+                                <label for="maxSpeed">Max Speed (m/s): <span id="maxSpeedValue">2</span></label>
+                                <input type="range" id="maxSpeed" min="0.1" max="5" value="2" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="smoothness">Smoothness: <span id="smoothnessValue">5</span></label>
+                                <input type="range" id="smoothness" min="1" max="10" value="5" step="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="trajectory-controls">
+                        <div class="trajectory-control-group">
+                            <h4>Waypoints</h4>
+                            <div class="control-slider">
+                                <label for="waypointX1">Waypoint 1 X: <span id="waypointX1Value">2</span></label>
+                                <input type="range" id="waypointX1" min="-10" max="10" value="2" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="waypointY1">Waypoint 1 Y: <span id="waypointY1Value">2</span></label>
+                                <input type="range" id="waypointY1" min="-10" max="10" value="2" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="waypointZ1">Waypoint 1 Z: <span id="waypointZ1Value">2</span></label>
+                                <input type="range" id="waypointZ1" min="0" max="5" value="2" step="0.1">
+                            </div>
+                        </div>
+                        
+                        <div class="trajectory-control-group">
+                            <h4>Waypoints</h4>
+                            <div class="control-slider">
+                                <label for="waypointX2">Waypoint 2 X: <span id="waypointX2Value">-2</span></label>
+                                <input type="range" id="waypointX2" min="-10" max="10" value="-2" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="waypointY2">Waypoint 2 Y: <span id="waypointY2Value">-2</span></label>
+                                <input type="range" id="waypointY2" min="-10" max="10" value="-2" step="0.1">
+                            </div>
+                            <div class="control-slider">
+                                <label for="waypointZ2">Waypoint 2 Z: <span id="waypointZ2Value">3</span></label>
+                                <input type="range" id="waypointZ2" min="0" max="5" value="3" step="0.1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <h4>Planned Trajectory</h4>
+                        <div class="trajectory-container">
+                            <div class="trajectory-header">Planned Flight Path</div>
+                            <canvas class="trajectory-canvas" id="plannedTrajectoryCanvas"></canvas>
+                        </div>
+                    </div>
+                    
+                    <button class="upload-trajectory-btn" id="uploadTrajectoryBtn">
+                        <i class="fas fa-upload"></i> Upload Trajectory to Firmware
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New License Purchase Modal -->
+    <div class="modal" id="licenseModal">
+        <div class="modal-content" style="max-width: 800px; height: auto;">
+            <button class="close-modal">×</button>
+            <div class="purchase-container">
+                <div class="purchase-header">
+                    <h2>Unlock Premium Features</h2>
+                    <p>Get full access to the AiRM Fateh Nano Drone Platform</p>
+                </div>
+                
+                <div class="purchase-steps">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="step active" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Details</div>
+                    </div>
+                    
+                    <div class="step" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Verification</div>
+                    </div>
+                    
+                    <div class="step" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">Payment</div>
+                    </div>
+                    
+                    <div class="step" id="step4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Complete</div>
+                    </div>
+                </div>
+                
+                <div class="purchase-form">
+                    <!-- Step 1: Personal Details -->
+                    <div class="form-section active" id="formStep1">
+                        <div class="price-tag">
+                            999
+                            <div class="discount-badge">50% OFF</div>
+                        </div>
+                        
+                        <div class="timer" id="discountTimer">
+                            Limited time offer: <span id="countdown">05:00</span>
+                        </div>
+                        
+                        <div class="features-list">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Full access to all drone control features</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Advanced flight trajectory planning</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Unlimited data analysis and exports</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Priority technical support</span>
+                            </div>
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Future updates included</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" class="form-control" placeholder="Enter your full name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" class="form-control" placeholder="Enter your email">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phone">Mobile Number</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="Enter your mobile number with country code">
+                        </div>
+                        
+                        <button class="btn btn-block" id="nextBtn1">Continue to Verification</button>
+                    </div>
+                    
+                    <!-- Step 2: OTP Verification -->
+                    <div class="form-section" id="formStep2">
+                        <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;">Verify Your Mobile Number</h3>
+                        <p style="text-align: center; margin-bottom: 1.5rem;">We've sent a 6-digit code to your mobile number</p>
+                        
+                        <div class="otp-inputs">
+                            <input type="text" class="otp-input" maxlength="1" data-index="0">
+                            <input type="text" class="otp-input" maxlength="1" data-index="1">
+                            <input type="text" class="otp-input" maxlength="1" data-index="2">
+                            <input type="text" class="otp-input" maxlength="1" data-index="3">
+                            <input type="text" class="otp-input" maxlength="1" data-index="4">
+                            <input type="text" class="otp-input" maxlength="1" data-index="5">
+                        </div>
+                        
+                        <p style="text-align: center; margin: 1rem 0;">
+                            Didn't receive code? <a href="#" id="resendOtp" style="color: var(--primary);">Resend</a>
+                            <span id="resendTimer" style="display: none;"> in <span id="resendCountdown">30</span>s</span>
+                        </p>
+                        
+                        <div class="nav-buttons">
+                            <button class="btn btn-outline" id="backBtn2">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                            <button class="btn" id="nextBtn2">Verify & Continue</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 3: Payment -->
+                    <div class="form-section" id="formStep3">
+                        <h3 style="text-align: center; color: var(--primary); margin-bottom: 1rem;">Select Payment Method</h3>
+                        
+                        <div class="payment-options">
+                            <div class="payment-option selected" data-method="upi">
+                                <i class="fas fa-mobile-alt"></i>
+                                <div>UPI Payment</div>
+                            </div>
+                            <div class="payment-option" data-method="card">
+                                <i class="far fa-credit-card"></i>
+                                <div>Credit/Debit Card</div>
+                            </div>
+                            <div class="payment-option" data-method="netbanking">
+                                <i class="fas fa-university"></i>
+                                <div>Net Banking</div>
+                            </div>
+                            <div class="payment-option" data-method="wallet">
+                                <i class="fas fa-wallet"></i>
+                                <div>Wallet</div>
+                            </div>
+                        </div>
+                        
+                        <div id="upiPayment" class="payment-method">
+                            <div class="qr-code-container">
+                                <p>Scan this QR code with any UPI app to pay</p>
+                                <div class="qr-code">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=upi://pay?pa=airm@upi&pn=AiRM%20Fateh&am=999&cu=INR" alt="UPI QR Code">
+                                </div>
+                                <p>Or use UPI ID: <strong>airm@upi</strong></p>
+                            </div>
+                        </div>
+                        
+                        <div id="cardPayment" class="payment-method" style="display: none;">
+                            <div class="form-group">
+                                <label for="cardNumber">Card Number</label>
+                                <input type="text" id="cardNumber" class="form-control" placeholder="1234 5678 9012 3456">
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="expiryDate">Expiry Date</label>
+                                    <input type="text" id="expiryDate" class="form-control" placeholder="MM/YY">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="cvv">CVV</label>
+                                    <input type="text" id="cvv" class="form-control" placeholder="123">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="cardName">Name on Card</label>
+                                <input type="text" id="cardName" class="form-control" placeholder="Name as on card">
+                            </div>
+                        </div>
+                        
+                        <div id="netbankingPayment" class="payment-method" style="display: none;">
+                            <div class="form-group">
+                                <label for="bankSelect">Select Bank</label>
+                                <select id="bankSelect" class="form-control">
+                                    <option value="">Select your bank</option>
+                                    <option value="sbi">State Bank of India</option>
+                                    <option value="hdfc">HDFC Bank</option>
+                                    <option value="icici">ICICI Bank</option>
+                                    <option value="axis">Axis Bank</option>
+                                    <option value="kotak">Kotak Mahindra Bank</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div id="walletPayment" class="payment-method" style="display: none;">
+                            <div class="form-group">
+                                <label for="walletSelect">Select Wallet</label>
+                                <select id="walletSelect" class="form-control">
+                                    <option value="">Select your wallet</option>
+                                    <option value="paytm">Paytm</option>
+                                    <option value="phonepe">PhonePe</option>
+                                    <option value="amazonpay">Amazon Pay</option>
+                                    <option value="mobikwik">MobiKwik</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="nav-buttons">
+                            <button class="btn btn-outline" id="backBtn3">
+                                <i class="fas fa-arrow-left"></i> Back
+                            </button>
+                            <button class="btn" id="nextBtn3">Complete Payment</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Step 4: Success -->
+                    <div class="form-section" id="formStep4">
+                        <div class="success-message">
+                            <i class="fas fa-check-circle"></i>
+                            <h3 style="color: var(--success); margin-bottom: 1rem;">Payment Successful!</h3>
+                            <p>Thank you for your purchase. Your license key has been generated and sent to your email.</p>
+                            
+                            <div class="license-key" id="licenseKeyDisplay">
+                                AIRM-XXXX-XXXX-XXXX
+                            </div>
+                            
+                            <p>This license key provides lifetime access to all premium features of the AiRM Fateh Nano Drone Platform.</p>
+                            
+                            <button class="btn" id="finishBtn" style="margin-top: 1.5rem;">
+                                <i class="fas fa-rocket"></i> Start Using Premium Features
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedBlocks = [];
+        let lastTapTime = 0;
+        let lastTappedBlock = null;
+        let tapTimeout = null;
+        let isDragging = false;
+        let errorLog = '';
+        let isConnected = false;
+        let isBuilt = false;
+        let mainCpp = '';
+        let dataChart = null;
+        let trajectoryChart = null;
+        let plannedTrajectoryChart = null;
+        let joystickPosition = { x: 70, y: 70 };
+        let hasValidLicense = false;
+        let generatedLicenseKey = '';
+        let freeAttempts = 5;
+        let otp = '';
+        const MASTER_LICENSE_KEY = "AIRM-MASTER-2024-CODE";
+
+        // Sample flight data for visualization
+        const flightData = {
+            altitude: Array.from({length: 100}, (_, i) => Math.sin(i/10) * 5 + 10),
+            velocity: Array.from({length: 100}, (_, i) => Math.cos(i/10) * 2),
+            acceleration: Array.from({length: 100}, (_, i) => -Math.sin(i/10) * 0.5),
+            angles: {
+                roll: Array.from({length: 100}, (_, i) => Math.sin(i/15) * 15),
+                pitch: Array.from({length: 100}, (_, i) => Math.cos(i/12) * 10),
+                yaw: Array.from({length: 100}, (_, i) => i/2)
+            },
+            motor: {
+                m1: Array.from({length: 100}, (_, i) => 50 + Math.sin(i/8) * 20),
+                m2: Array.from({length: 100}, (_, i) => 50 + Math.cos(i/8) * 20),
+                m3: Array.from({length: 100}, (_, i) => 50 - Math.sin(i/8) * 20),
+                m4: Array.from({length: 100}, (_, i) => 50 - Math.cos(i/8) * 20)
+            },
+            battery: Array.from({length: 100}, (_, i) => 100 - i/2)
+        };
+
+        // Sample trajectory data (x, y, z coordinates over time)
+        const trajectoryData = {
+            x: Array.from({length: 50}, (_, i) => Math.sin(i/5) * 2),
+            y: Array.from({length: 50}, (_, i) => Math.cos(i/5) * 2),
+            z: Array.from({length: 50}, (_, i) => i/10),
+            time: Array.from({length: 50}, (_, i) => i/5)
+        };
+
+        const dataDescriptions = {
+            altitude: "Altitude shows the drone's height over time (in meters). Analyze the rate of change to understand velocity and acceleration.",
+            velocity: "Velocity shows the drone's speed over time (in m/s). The slope indicates acceleration.",
+            acceleration: "Acceleration shows how the drone's speed changes over time (in m/s²). Peaks indicate rapid changes in motion.",
+            angles: "Orientation angles show the drone's roll, pitch, and yaw over time (in degrees). These are fundamental for stability analysis.",
+            motor: "Motor speeds show the power output to each motor (0-100%). Compare how different motors work together to maintain stability.",
+            battery: "Battery level shows power consumption over time (0-100%). The slope indicates power draw rate."
+        };
+
+        const mathConcepts = {
+            altitude: ["Linear functions (y = mx + b)", "Rate of change (slope)", "Area under curve"],
+            velocity: ["Derivatives", "Instantaneous rate of change", "Tangent lines"],
+            acceleration: ["Second derivatives", "Concavity", "Maxima/minima"],
+            angles: ["Trigonometric functions", "Angular measurement", "Periodic functions"],
+            motor: ["Proportional relationships", "Averages", "Comparisons"],
+            battery: ["Linear decay", "Slope-intercept form", "Extrapolation"]
+        };
+
+        const physicsConcepts = {
+            altitude: ["Kinematics", "Gravitational potential energy", "Free fall"],
+            velocity: ["Newton's first law", "Inertia", "Terminal velocity"],
+            acceleration: ["Newton's second law (F=ma)", "Force diagrams", "Thrust"],
+            angles: ["Torque", "Rotational motion", "Angular momentum"],
+            motor: ["Electromagnetism", "Power output", "Thrust-to-weight ratio"],
+            battery: ["Energy consumption", "Power calculations", "Efficiency"]
+        };
+
+        // Block data with code and equations
+        const blockData = {
+            initialize_system: {
+                code: `void initializeSystem() {
+    // Initialize all drone components
+    motors.init();
+    sensors.init();
+    radio.init();
+    leds.init();
+    
+    // Check system status
+    if (!motors.ready() || !sensors.ready()) {
+        error("Initialization failed");
+        return;
+    }
+    
+    log("System initialized successfully");
+}`,
+                equations: `\\[
+\\text{System Initialization} = \\begin{cases}
+\\text{Motors} \\rightarrow \\text{Ready} \\\\
+\\text{Sensors} \\rightarrow \\text{Calibrated} \\\\
+\\text{Radio} \\rightarrow \\text{Connected}
+\\end{cases}
+\\]`
+            },
+            log_data: {
+                code: `void logData() {
+    // Log sensor data
+    float altitude = sensors.getAltitude();
+    float battery = sensors.getBatteryLevel();
+    
+    // Log to SD card
+    sdCard.write("Altitude: " + String(altitude));
+    sdCard.write("Battery: " + String(battery));
+    
+    // Log to serial
+    Serial.print("Altitude: "); Serial.println(altitude);
+    Serial.print("Battery: "); Serial.println(battery);
+}`,
+                equations: `\\[
+\\text{Data Logging} = \\begin{cases}
+\\text{Altitude} = f(\\text{Pressure}) \\\\
+\\text{Battery} = \\frac{V_{\\text{measured}} - V_{\\text{min}}}{V_{\\text{max}} - V_{\\text{min}}} \\times 100\\%
+\\end{cases}
+\\]`
+            },
+            read_sensor_data: {
+                code: `void readSensorData() {
+    // Read IMU data
+    imuData = imu.read();
+    
+    // Read barometer
+    altitude = baro.readAltitude();
+    
+    // Read battery voltage
+    batteryVoltage = analogRead(BATTERY_PIN) * VOLTAGE_DIVIDER_RATIO;
+    
+    // Update sensor fusion
+    updateSensorFusion(imuData, altitude);
+}`,
+                equations: `\\[
+\\begin{aligned}
+\\text{Acceleration} &= \\sqrt{a_x^2 + a_y^2 + a_z^2} \\\\
+\\text{Gyro Rate} &= \\sqrt{g_x^2 + g_y^2 + g_z^2} \\\\
+\\text{Altitude} &= \\frac{T_0}{L_0} \\left[ \\left( \\frac{P}{P_0} \\right)^{-\\frac{R L_0}{g M}} - 1 \\right]
+\\end{aligned}
+\\]`
+            },
+            calibrate_sensor: {
+                code: `void calibrateSensors() {
+    // Calibrate IMU
+    imu.calibrateGyro();
+    imu.calibrateAccel();
+    
+    // Calibrate barometer
+    baro.calibrate();
+    
+    // Check calibration status
+    if (!imu.isCalibrated() || !baro.isCalibrated()) {
+        error("Calibration failed");
+        return;
+    }
+    
+    log("Sensors calibrated successfully");
+}`,
+                equations: `\\[
+\\begin{aligned}
+\\text{Gyro Bias} &= \\frac{1}{N} \\sum_{i=1}^{N} g_i \\\\
+\\text{Accel Bias} &= \\frac{1}{N} \\sum_{i=1}^{N} a_i - g \\\\
+\\text{Baro Offset} &= P_{\\text{reference}} - P_{\\text{measured}}
+\\end{aligned}
+\\]`
+            },
+            fuse_sensor_data: {
+                code: `void fuseSensorData() {
+    // Get sensor data
+    imuData = imu.read();
+    gpsData = gps.read();
+    baroData = baro.read();
+    
+    // Sensor fusion algorithm
+    fusedData = kalmanFilter.update(
+        imuData, gpsData, baroData
+    );
+    
+    // Update state estimate
+    updateStateEstimate(fusedData);
+}`,
+                equations: `\\[
+\\begin{aligned}
+\\text{Kalman Filter} &= \\begin{cases}
+\\text{Prediction: } \\hat{x}_k^- &= F_k \\hat{x}_{k-1} + B_k u_k \\\\
+\\text{Update: } K_k &= P_k^- H_k^T (H_k P_k^- H_k^T + R_k)^{-1} \\\\
+\\hat{x}_k &= \\hat{x}_k^- + K_k(z_k - H_k \\hat{x}_k^-) \\\\
+P_k &= (I - K_k H_k) P_k^-
+\\end{cases}
+\\end{aligned}
+\\]`
+            },
+            set_control_targets: {
+                code: `void setControlTargets() {
+    // Get current state
+    state = getCurrentState();
+    
+    // Calculate desired state based on input
+    if (flightMode == HOVER) {
+        target.altitude = hoverAltitude;
+        target.velocity = {0, 0, 0};
+    } else if (flightMode == WAYPOINT) {
+        target.position = getNextWaypoint();
+        target.velocity = calculateApproachVelocity();
+    }
+    
+    // Update controller targets
+    controller.setTarget(target);
+}`,
+                equations: `\\[
+\\begin{aligned}
+\\text{Waypoint Navigation} &= \\begin{cases}
+\\vec{v}_{desired} &= k_p (\\vec{p}_{target} - \\vec{p}_{current}) \\\\
+\\vec{a}_{desired} &= k_v (\\vec{v}_{target} - \\vec{v}_{current})
+\\end{cases}
+\\end{aligned}
+\\]`
+            },
+            compute_pid_control: {
+                code: `void computePIDControl() {
+    // Get current state and target
+    state = getCurrentState();
+    target = controller.getTarget();
+    
+    // Calculate errors
+    error.position = target.position - state.position;
+    error.velocity = target.velocity - state.velocity;
+    error.angle = target.angle - state.angle;
+    
+    // Compute PID outputs
+    output.position = positionPID.compute(error.position);
+    output.velocity = velocityPID.compute(error.velocity);
+    output.angle = anglePID.compute(error.angle);
+    
+    // Send outputs to motors
+    applyMotorOutputs(output);
+}`,
+                equations: `\\[
+\\text{PID Control} = k_p e(t) + k_i \\int_0^t e(\\tau) d\\tau + k_d \\frac{de(t)}{dt}
+\\]`
+            },
+            auto_tune_pid: {
+                code: `void autoTunePID() {
+    // Check if tuning is needed
+    if (!pidNeedsTuning) return;
+    
+    // Start auto-tuning process
+    pidTuner.start();
+    
+    // Apply test signals
+    while (!pidTuner.isComplete()) {
+        testSignal = pidTuner.getTestSignal();
+        applyTestSignal(testSignal);
+        delay(10);
+    }
+    
+    // Get tuned parameters
+    tunedParams = pidTuner.getParameters();
+    
+    // Update PID controllers
+    positionPID.setParameters(tunedParams.position);
+    velocityPID.setParameters(tunedParams.velocity);
+    anglePID.setParameters(tunedParams.angle);
+}`,
+                equations: `\\[
+\\text{Ziegler-Nichols Tuning} = \\begin{cases}
+k_p &= 0.6 k_u \\\\
+T_i &= 0.5 T_u \\\\
+T_d &= 0.125 T_u
+\\end{cases}
+\\]`
+            },
+            drive_motors: {
+                code: `void driveMotors() {
+    // Get motor outputs from controller
+    motorOutputs = controller.getMotorOutputs();
+    
+    // Apply outputs with safety checks
+    for (int i = 0; i < 4; i++) {
+        motorOutputs[i] = constrain(motorOutputs[i], 0, MAX_THROTTLE);
+        motors[i].setSpeed(motorOutputs[i]);
+    }
+}`,
+                equations: `\\[
+\\begin{aligned}
+\\text{Motor Mixing} &= \\begin{cases}
+m_1 &= T + R + P - Y \\\\
+m_2 &= T - R + P + Y \\\\
+m_3 &= T + R - P + Y \\\\
+m_4 &= T - R - P - Y
+\\end{cases}
+\\end{aligned}
+\\]`
+            },
+            calibrate_motor_trim: {
+                code: `void calibrateMotorTrim() {
+    // Start calibration
+    motorCalibrator.start();
+    
+    // Find minimum throttle for each motor
+    for (int i = 0; i < 4; i++) {
+        minThrottle[i] = motorCalibrator.findMinThrottle(i);
+    }
+    
+    // Find balanced throttle for hover
+    hoverThrottle = motorCalibrator.findHoverThrottle();
+    
+    // Save calibration
+    saveMotorCalibration(minThrottle, hoverThrottle);
+}`,
+                equations: `\\[
+\\text{Motor Thrust} = k_T \\omega^2
+\\]`
+            },
+            handle_communication: {
+                code: `void handleCommunication() {
+    // Check for incoming radio messages
+    if (radio.available()) {
+        message = radio.read();
+        processMessage(message);
+    }
+    
+    // Send telemetry data
+    if (millis() - lastTelemetryTime > TELEMETRY_INTERVAL) {
+        telemetry = gatherTelemetry();
+        radio.send(telemetry);
+        lastTelemetryTime = millis();
+    }
+}`,
+                equations: `\\[
+\\text{Communication Protocol} = \\begin{cases}
+\\text{Baud Rate} &= 115200 \\\\
+\\text{Packet Size} &= 32 \\text{ bytes} \\\\
+\\text{Checksum} &= \\sum_{i=1}^{N} data_i \\mod 256
+\\end{cases}
+\\]`
+            },
+            monitor_battery: {
+                code: `void monitorBattery() {
+    // Read battery voltage
+    batteryVoltage = analogRead(BATTERY_PIN) * VOLTAGE_DIVIDER_RATIO;
+    
+    // Calculate remaining capacity
+    batteryPercentage = map(batteryVoltage, MIN_VOLTAGE, MAX_VOLTAGE, 0, 100);
+    batteryPercentage = constrain(batteryPercentage, 0, 100);
+    
+    // Check for low battery
+    if (batteryPercentage < LOW_BATTERY_THRESHOLD) {
+        triggerLowBatteryWarning();
+    }
+}`,
+                equations: `\\[
+\\text{Battery Capacity} = \\frac{V_{\\text{measured}} - V_{\\text{min}}}{V_{\\text{max}} - V_{\\text{min}}} \\times 100\\%
+\\]`
+            },
+            run_main_loop: {
+                code: `void runMainLoop() {
+    // Main control loop
+    while (true) {
+        // Read sensors
+        readSensorData();
+        
+        // Update state estimate
+        updateStateEstimate();
+        
+        // Compute control outputs
+        computeControlOutputs();
+        
+        // Drive motors
+        driveMotors();
+        
+        // Handle communication
+        handleCommunication();
+        
+        // Monitor battery
+        monitorBattery();
+        
+        // Maintain loop rate
+        delay(LOOP_PERIOD_MS);
+    }
+}`,
+                equations: `\\[
+\\text{Control Frequency} = \\frac{1}{\\Delta t} \\geq 100 \\text{ Hz}
+\\]`
+            }
+        };
+
+        function setupInteract() {
+            interact('.block')
+                .draggable({
+                    inertia: false,
+                    modifiers: [
+                        interact.modifiers.restrictRect({ restriction: 'parent', endOnly: true }),
+                        interact.modifiers.snap({ targets: [interact.snappers.grid({ x: 10, y: 10 })], range: Infinity, relativePoints: [{ x: 0, y: 0 }] })
+                    ],
+                    listeners: {
+                        start: (event) => {
+                            isDragging = true;
+                            event.target.classList.add('active');
+                        },
+                        move: (event) => {
+                            const target = event.target;
+                            const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+                            const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+                            target.style.transform = `translate(${x}px, ${y}px)`;
+                            target.setAttribute('data-x', x);
+                            target.setAttribute('data-y', y);
+                            updateArrows();
+                        },
+                        end: (event) => {
+                            isDragging = false;
+                            event.target.classList.remove('active');
+                            updateArrows();
+                        }
+                    }
+                });
+        }
+
+        function updateArrows() {
+            const svg = document.querySelector('.arrow');
+            while (svg.childNodes.length > 1) svg.removeChild(svg.lastChild);
+
+            for (let i = 0; i < selectedBlocks.length - 1; i++) {
+                const block1 = selectedBlocks[i];
+                const block2 = selectedBlocks[i + 1];
+                const rect1 = block1.getBoundingClientRect();
+                const rect2 = block2.getBoundingClientRect();
+                const canvasRect = document.querySelector('.canvas').getBoundingClientRect();
+
+                const left1 = rect1.left - canvasRect.left;
+                const right1 = rect1.right - canvasRect.left;
+                const top1 = rect1.top - canvasRect.top;
+                const bottom1 = rect1.bottom - canvasRect.top;
+                const left2 = rect2.left - canvasRect.left;
+                const right2 = rect2.right - canvasRect.left;
+                const top2 = rect2.top - canvasRect.top;
+                const bottom2 = rect2.bottom - canvasRect.top;
+
+                const distances = [
+                    { x1: right1, y1: top1 + rect1.height / 2, x2: left2, y2: top2 + rect2.height / 2, dist: Math.abs(right1 - left2) },
+                    { x1: left1, y1: top1 + rect1.height / 2, x2: right2, y2: top2 + rect2.height / 2, dist: Math.abs(left1 - right2) },
+                    { x1: left1 + rect1.width / 2, y1: bottom1, x2: left2 + rect2.width / 2, y2: top2, dist: Math.abs(bottom1 - top2) },
+                    { x1: left1 + rect1.width / 2, y1: top1, x2: left2 + rect2.width / 2, y2: bottom2, dist: Math.abs(top1 - bottom2) }
+                ];
+
+                const { x1, y1, x2, y2 } = distances.reduce((min, curr) => curr.dist < min.dist ? curr : min, distances[0]);
+
+                if (x1 !== x2 || y1 !== y2) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', x1);
+                    line.setAttribute('y1', y1);
+                    line.setAttribute('x2', x2);
+                    line.setAttribute('y2', y2);
+                    line.setAttribute('stroke', '#ffff00');
+                    line.setAttribute('stroke-width', '2');
+                    line.setAttribute('marker-end', 'url(#arrowhead)');
+                    svg.appendChild(line);
+                }
+            }
+        }
+
+        function showModal(block) {
+            if (!hasValidLicense && freeAttempts <= 0) {
+                showLicenseModal();
+                return;
+            }
+
+            const modal = document.getElementById('blockModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalCode = document.getElementById('modalCode');
+            const modalEquations = document.getElementById('modalEquations');
+            const blockTitle = block.querySelector('h3').textContent;
+            const blockId = block.getAttribute('data-id');
+
+            modalTitle.textContent = blockTitle;
+            modalCode.value = blockData[blockId].code;
+            modalEquations.innerHTML = blockData[blockId].equations;
+            modal.style.display = 'flex';
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, modalEquations]);
+            
+            // Decrement free attempts if not premium
+            if (!hasValidLicense) {
+                freeAttempts--;
+                updateAttemptsCounter();
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+        }
+
+        function showControlsModal() {
+            const modal = document.getElementById('controlsModal');
+            modal.style.display = 'flex';
+        }
+
+        function showConnectModal() {
+            const modal = document.getElementById('connectModal');
+            modal.style.display = 'flex';
+        }
+
+        function showTutorialModal() {
+            const modal = document.getElementById('tutorialModal');
+            modal.style.display = 'flex';
+        }
+
+        function showReverseLearningModal() {
+            if (!hasValidLicense && freeAttempts <= 0) {
+                showLicenseModal();
+                return;
+            }
+
+            const modal = document.getElementById('reverseLearningModal');
+            modal.style.display = 'flex';
+            updateDataDescription();
+            
+            // Initialize charts if they don't exist
+            if (!trajectoryChart) {
+                initTrajectoryChart();
+            }
+            if (!plannedTrajectoryChart && document.getElementById('planning-tab').classList.contains('active')) {
+                initPlannedTrajectoryChart();
+            }
+            
+            // Decrement free attempts if not premium
+            if (!hasValidLicense) {
+                freeAttempts--;
+                updateAttemptsCounter();
+            }
+        }
+
+        function showLicenseModal() {
+            const modal = document.getElementById('licenseModal');
+            modal.style.display = 'flex';
+            resetPurchaseFlow();
+        }
+
+        function resetPurchaseFlow() {
+            // Reset all steps
+            currentPurchaseStep = 1;
+            updatePurchaseProgress();
+            
+            // Reset all form fields
+            document.getElementById('fullName').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('phone').value = '';
+            
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+            
+            // Reset payment method
+            paymentMethod = 'upi';
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('.payment-option[data-method="upi"]').classList.add('selected');
+            document.querySelectorAll('.payment-method').forEach(method => method.style.display = 'none');
+            document.getElementById('upiPayment').style.display = 'block';
+            
+            // Reset timers
+            discountTimer = 300;
+            resendTimer = 30;
+            
+            // Hide all form sections except first
+            document.querySelectorAll('.form-section').forEach(section => section.classList.remove('active'));
+            document.getElementById('formStep1').classList.add('active');
+        }
+
+        function updateDataDescription() {
+            const dataType = document.getElementById('dataType').value;
+            document.getElementById('dataDescription').innerHTML = `<p>${dataDescriptions[dataType]}</p>`;
+            
+            // Update math concepts
+            const mathList = document.getElementById('mathConcepts');
+            mathList.innerHTML = '';
+            mathConcepts[dataType].forEach(concept => {
+                const li = document.createElement('li');
+                li.textContent = concept;
+                mathList.appendChild(li);
+            });
+            
+            // Update physics concepts
+            const physicsList = document.getElementById('physicsConcepts');
+            physicsList.innerHTML = '';
+            physicsConcepts[dataType].forEach(concept => {
+                const li = document.createElement('li');
+                li.textContent = concept;
+                physicsList.appendChild(li);
+            });
+        }
+
+        function generateGraph() {
+            const dataType = document.getElementById('dataType').value;
+            const ctx = document.getElementById('dataGraph').getContext('2d');
+            
+            // Destroy previous chart if it exists
+            if (dataChart) {
+                dataChart.destroy();
+            }
+            
+            // Create new chart based on selected data type
+            switch(dataType) {
+                case 'altitude':
+                case 'velocity':
+                case 'acceleration':
+                case 'battery':
+                    dataChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 100}, (_, i) => i/10),
+                            datasets: [{
+                                label: dataType.charAt(0).toUpperCase() + dataType.slice(1),
+                                data: flightData[dataType],
+                                borderColor: '#00f0ff',
+                                backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                                borderWidth: 2,
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: dataType !== 'acceleration',
+                                    title: {
+                                        display: true,
+                                        text: dataType === 'altitude' ? 'Meters' : 
+                                              dataType === 'velocity' ? 'm/s' : 
+                                              dataType === 'acceleration' ? 'm/s²' : '%',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Time (seconds)',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#00f0ff'
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                    break;
+                
+                case 'angles':
+                    dataChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 100}, (_, i) => i/10),
+                            datasets: [
+                                {
+                                    label: 'Roll',
+                                    data: flightData.angles.roll,
+                                    borderColor: '#ff3e7f',
+                                    backgroundColor: 'rgba(255, 62, 127, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Pitch',
+                                    data: flightData.angles.pitch,
+                                    borderColor: '#00f0ff',
+                                    backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Yaw',
+                                    data: flightData.angles.yaw,
+                                    borderColor: '#ffff00',
+                                    backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Degrees',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Time (seconds)',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#00f0ff'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    break;
+                
+                case 'motor':
+                    dataChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: Array.from({length: 100}, (_, i) => i/10),
+                            datasets: [
+                                {
+                                    label: 'Motor 1',
+                                    data: flightData.motor.m1,
+                                    borderColor: '#ff3e7f',
+                                    backgroundColor: 'rgba(255, 62, 127, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Motor 2',
+                                    data: flightData.motor.m2,
+                                    borderColor: '#00f0ff',
+                                    backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Motor 3',
+                                    data: flightData.motor.m3,
+                                    borderColor: '#ffff00',
+                                    backgroundColor: 'rgba(255, 255, 0, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                },
+                                {
+                                    label: 'Motor 4',
+                                    data: flightData.motor.m4,
+                                    borderColor: '#10b981',
+                                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.1
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: 'Speed (%)',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Time (seconds)',
+                                        color: '#00f0ff'
+                                    },
+                                    grid: {
+                                        color: 'rgba(0, 240, 255, 0.1)'
+                                    },
+                                    ticks: {
+                                        color: '#00f0ff'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: '#00f0ff'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    break;
+            }
+        }
+
+        function initTrajectoryChart() {
+            const ctx = document.getElementById('trajectoryCanvas').getContext('2d');
+            
+            // Create a 3D-like trajectory visualization
+            trajectoryChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Flight Path',
+                        data: trajectoryData.x.map((x, i) => ({x: x, y: trajectoryData.y[i]})),
+                        borderColor: '#00f0ff',
+                        backgroundColor: 'rgba(0, 240, 255, 0.5)',
+                        borderWidth: 1,
+                        pointRadius: 3,
+                        showLine: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Y Position (m)',
+                                color: '#00f0ff'
+                            },
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#00f0ff'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X Position (m)',
+                                color: '#00f0ff'
+                            },
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#00f0ff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    return [
+                                        `X: ${context.parsed.x.toFixed(2)}m`,
+                                        `Y: ${context.parsed.y.toFixed(2)}m`,
+                                        `Z: ${trajectoryData.z[index].toFixed(2)}m`,
+                                        `Time: ${trajectoryData.time[index].toFixed(2)}s`
+                                    ];
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function initPlannedTrajectoryChart() {
+            const ctx = document.getElementById('plannedTrajectoryCanvas').getContext('2d');
+            
+            // Generate initial planned trajectory
+            const plannedTrajectory = generatePlannedTrajectory();
+            
+            // Create a 3D-like trajectory visualization
+            plannedTrajectoryChart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Planned Path',
+                        data: plannedTrajectory.x.map((x, i) => ({x: x, y: plannedTrajectory.y[i]})),
+                        borderColor: '#ff3e7f',
+                        backgroundColor: 'rgba(255, 62, 127, 0.5)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        showLine: true
+                    },
+                    {
+                        label: 'Waypoints',
+                        data: [
+                            {x: parseFloat(document.getElementById('startX').value), 
+                             y: parseFloat(document.getElementById('startY').value)},
+                            {x: parseFloat(document.getElementById('waypointX1').value), 
+                             y: parseFloat(document.getElementById('waypointY1').value)},
+                            {x: parseFloat(document.getElementById('waypointX2').value), 
+                             y: parseFloat(document.getElementById('waypointY2').value)}
+                        ],
+                        backgroundColor: '#ffff00',
+                        borderColor: '#ffff00',
+                        pointRadius: 6,
+                        showLine: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Y Position (m)',
+                                color: '#00f0ff'
+                            },
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#00f0ff'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'X Position (m)',
+                                color: '#00f0ff'
+                            },
+                            grid: {
+                                color: 'rgba(0, 240, 255, 0.1)'
+                            },
+                            ticks: {
+                                color: '#00f0ff'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const index = context.dataIndex;
+                                    let zValue = 0;
+                                    if (context.datasetIndex === 0) {
+                                        zValue = plannedTrajectory.z[index];
+                                        return [
+                                            `X: ${context.parsed.x.toFixed(2)}m`,
+                                            `Y: ${context.parsed.y.toFixed(2)}m`,
+                                            `Z: ${zValue.toFixed(2)}m`,
+                                            `Time: ${plannedTrajectory.time[index].toFixed(2)}s`
+                                        ];
+                                    } else {
+                                        // For waypoints
+                                        const wpIndex = index;
+                                        if (wpIndex === 0) {
+                                            zValue = parseFloat(document.getElementById('startZ').value);
+                                        } else if (wpIndex === 1) {
+                                            zValue = parseFloat(document.getElementById('waypointZ1').value);
+                                        } else {
+                                            zValue = parseFloat(document.getElementById('waypointZ2').value);
+                                        }
+                                        return [
+                                            `Waypoint ${wpIndex + 1}`,
+                                            `X: ${context.parsed.x.toFixed(2)}m`,
+                                            `Y: ${context.parsed.y.toFixed(2)}m`,
+                                            `Z: ${zValue.toFixed(2)}m`
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function generatePlannedTrajectory() {
+            const startX = parseFloat(document.getElementById('startX').value);
+            const startY = parseFloat(document.getElementById('startY').value);
+            const startZ = parseFloat(document.getElementById('startZ').value);
+            const duration = parseFloat(document.getElementById('flightDuration').value);
+            const maxSpeed = parseFloat(document.getElementById('maxSpeed').value);
+            const smoothness = parseFloat(document.getElementById('smoothness').value);
+            
+            const wp1X = parseFloat(document.getElementById('waypointX1').value);
+            const wp1Y = parseFloat(document.getElementById('waypointY1').value);
+            const wp1Z = parseFloat(document.getElementById('waypointZ1').value);
+            
+            const wp2X = parseFloat(document.getElementById('waypointX2').value);
+            const wp2Y = parseFloat(document.getElementById('waypointY2').value);
+            const wp2Z = parseFloat(document.getElementById('waypointZ2').value);
+            
+            // Generate smooth trajectory using Bézier curves
+            const numPoints = Math.floor(duration * 10 * smoothness);
+            const trajectory = {
+                x: [],
+                y: [],
+                z: [],
+                time: []
+            };
+            
+            for (let i = 0; i <= numPoints; i++) {
+                const t = i / numPoints;
+                const t2 = t * t;
+                const t3 = t2 * t;
+                
+                // Cubic Bézier curve
+                const mt = 1 - t;
+                const mt2 = mt * mt;
+                const mt3 = mt2 * mt;
+                
+                // Control points for smooth transition
+                const c1x = startX + (wp1X - startX) * 0.3;
+                const c1y = startY + (wp1Y - startY) * 0.3;
+                const c2x = wp1X + (wp2X - wp1X) * 0.3;
+                const c2y = wp1Y + (wp2Y - wp1Y) * 0.3;
+                
+                // Calculate position
+                trajectory.x.push(
+                    mt3 * startX + 
+                    3 * mt2 * t * c1x + 
+                    3 * mt * t2 * c2x + 
+                    t3 * wp2X
+                );
+                
+                trajectory.y.push(
+                    mt3 * startY + 
+                    3 * mt2 * t * c1y + 
+                    3 * mt * t2 * c2y + 
+                    t3 * wp2Y
+                );
+                
+                // Linear interpolation for Z (altitude)
+                if (t < 0.5) {
+                    trajectory.z.push(startZ + (wp1Z - startZ) * (t * 2));
+                } else {
+                    trajectory.z.push(wp1Z + (wp2Z - wp1Z) * ((t - 0.5) * 2));
+                }
+                
+                // Time calculation based on distance and max speed
+                trajectory.time.push(t * duration);
+            }
+            
+            return trajectory;
+        }
+
+        function updatePlannedTrajectory() {
+            if (!plannedTrajectoryChart) return;
+            
+            const plannedTrajectory = generatePlannedTrajectory();
+            
+            // Update chart data
+            plannedTrajectoryChart.data.datasets[0].data = plannedTrajectory.x.map((x, i) => ({x: x, y: plannedTrajectory.y[i]}));
+            plannedTrajectoryChart.data.datasets[1].data = [
+                {x: parseFloat(document.getElementById('startX').value), 
+                 y: parseFloat(document.getElementById('startY').value)},
+                {x: parseFloat(document.getElementById('waypointX1').value), 
+                 y: parseFloat(document.getElementById('waypointY1').value)},
+                {x: parseFloat(document.getElementById('waypointX2').value), 
+                 y: parseFloat(document.getElementById('waypointY2').value)}
+            ];
+            
+            plannedTrajectoryChart.update();
+        }
+
+        function zoomIn() {
+            if (dataChart) {
+                dataChart.options.scales.x.min = dataChart.options.scales.x.min || 0;
+                dataChart.options.scales.x.max = (dataChart.options.scales.x.max || 10) / 2;
+                dataChart.update();
+            }
+        }
+
+        function zoomOut() {
+            if (dataChart) {
+                dataChart.options.scales.x.min = 0;
+                dataChart.options.scales.x.max = 10;
+                dataChart.update();
+            }
+        }
+
+        function exportData() {
+            const dataType = document.getElementById('dataType').value;
+            let csvContent = "Time (s),Value\n";
+            
+            if (dataType === 'angles') {
+                csvContent = "Time (s),Roll,Pitch,Yaw\n";
+                for (let i = 0; i < 100; i++) {
+                    csvContent += `${i/10},${flightData.angles.roll[i]},${flightData.angles.pitch[i]},${flightData.angles.yaw[i]}\n`;
+                }
+            } else if (dataType === 'motor') {
+                csvContent = "Time (s),Motor 1,Motor 2,Motor 3,Motor 4\n";
+                for (let i = 0; i < 100; i++) {
+                    csvContent += `${i/10},${flightData.motor.m1[i]},${flightData.motor.m2[i]},${flightData.motor.m3[i]},${flightData.motor.m4[i]}\n`;
+                }
+            } else {
+                for (let i = 0; i < 100; i++) {
+                    csvContent += `${i/10},${flightData[dataType][i]}\n`;
+                }
+            }
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `drone_${dataType}_data.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function exportTrajectoryData() {
+    let csvContent = "Time (s),X Position (m),Y Position (m),Z Position (m)\n";
+    
+    for (let i = 0; i < trajectoryData.time.length; i++) {
+        csvContent += `${trajectoryData.time[i].toFixed(2)},${trajectoryData.x[i].toFixed(2)},${trajectoryData.y[i].toFixed(2)},${trajectoryData.z[i].toFixed(2)}\n`;
+    }
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'drone_trajectory_data.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Initialize the joystick functionality
+function initJoystick() {
+    const joystick = document.getElementById('joystick');
+    const container = document.querySelector('.joystick-container');
+    const containerRect = container.getBoundingClientRect();
+    const centerX = containerRect.width / 2;
+    const centerY = containerRect.height / 2;
+    const radius = containerRect.width / 2 - 30;
+    
+    interact(joystick).draggable({
+        restrict: {
+            restriction: container,
+            elementRect: { top: 0, left: 0, bottom: 1, right: 1 },
+            endOnly: true
+        },
+        onmove: function(event) {
+            const x = event.clientX - containerRect.left - centerX;
+            const y = event.clientY - containerRect.top - centerY;
+            const distance = Math.sqrt(x*x + y*y);
+            
+            if (distance < radius) {
+                joystick.style.transform = `translate(${x}px, ${y}px)`;
+                joystickPosition = { x: x + centerX, y: y + centerY };
+            } else {
+                const angle = Math.atan2(y, x);
+                const limitedX = Math.cos(angle) * radius;
+                const limitedY = Math.sin(angle) * radius;
+                joystick.style.transform = `translate(${limitedX}px, ${limitedY}px)`;
+                joystickPosition = { x: limitedX + centerX, y: limitedY + centerY };
+            }
+            
+            // Calculate joystick position as percentage (-100 to 100)
+            const xPercent = Math.round((joystickPosition.x - centerX) / radius * 100);
+            const yPercent = Math.round((centerY - joystickPosition.y) / radius * 100);
+            
+            // Send control commands based on joystick position
+            if (isConnected) {
+                // This would be replaced with actual drone control commands
+                console.log(`Joystick position - X: ${xPercent}%, Y: ${yPercent}%`);
+            }
+        },
+        onend: function() {
+            // Return joystick to center when released
+            joystick.style.transform = 'translate(0, 0)';
+            joystickPosition = { x: centerX, y: centerY };
+            
+            // Send stop command when joystick is released
+            if (isConnected) {
+                console.log('Joystick centered - Stopping movement');
+            }
+        }
+    });
+}
+
+// Update slider value displays
+function updateSliderValues() {
+    document.getElementById('startXValue').textContent = document.getElementById('startX').value;
+    document.getElementById('startYValue').textContent = document.getElementById('startY').value;
+    document.getElementById('startZValue').textContent = document.getElementById('startZ').value;
+    document.getElementById('flightDurationValue').textContent = document.getElementById('flightDuration').value;
+    document.getElementById('maxSpeedValue').textContent = document.getElementById('maxSpeed').value;
+    document.getElementById('smoothnessValue').textContent = document.getElementById('smoothness').value;
+    document.getElementById('waypointX1Value').textContent = document.getElementById('waypointX1').value;
+    document.getElementById('waypointY1Value').textContent = document.getElementById('waypointY1').value;
+    document.getElementById('waypointZ1Value').textContent = document.getElementById('waypointZ1').value;
+    document.getElementById('waypointX2Value').textContent = document.getElementById('waypointX2').value;
+    document.getElementById('waypointY2Value').textContent = document.getElementById('waypointY2').value;
+    document.getElementById('waypointZ2Value').textContent = document.getElementById('waypointZ2').value;
+}
+
+// Update attempts counter display
+function updateAttemptsCounter() {
+    document.getElementById('attemptsLeft').textContent = freeAttempts;
+    if (freeAttempts <= 0 && !hasValidLicense) {
+        document.getElementById('attemptsCounter').style.borderColor = 'var(--error)';
+    }
+}
+
+// Build the drone firmware from selected blocks
+function buildFirmware() {
+    if (!hasValidLicense && freeAttempts <= 0) {
+        showLicenseModal();
+        return;
+    }
+    
+    // Check if at least the main loop is selected
+    const hasMainLoop = selectedBlocks.some(block => block.getAttribute('data-id') === 'run_main_loop');
+    if (!hasMainLoop) {
+        showStatusMessage('Error: Must include "Run Main Loop" block', true);
+        return;
+    }
+    
+    showStatusMessage('Building firmware...', false);
+    
+    // Generate main.cpp content from selected blocks
+    mainCpp = `// AiRM Fateh Nano Drone Firmware\n// Auto-generated by Math Learning Platform\n\n`;
+    
+    // Add includes and global variables
+    mainCpp += `#include <Arduino.h>\n#include "drone.h"\n\n`;
+    mainCpp += `// Global variables\nDrone drone;\nbool systemActive = true;\n\n`;
+    
+    // Add functions from selected blocks
+    selectedBlocks.forEach(block => {
+        const blockId = block.getAttribute('data-id');
+        mainCpp += blockData[blockId].code + '\n\n';
+    });
+    
+    // Add setup and loop functions
+    mainCpp += `void setup() {\n  Serial.begin(115200);\n  initializeSystem();\n}\n\n`;
+    mainCpp += `void loop() {\n  runMainLoop();\n}\n`;
+    
+    // Simulate build process
+    setTimeout(() => {
+        isBuilt = true;
+        showStatusMessage('Build successful! Ready to upload', false);
+        
+        // Decrement free attempts if not premium
+        if (!hasValidLicense) {
+            freeAttempts--;
+            updateAttemptsCounter();
+        }
+    }, 2000);
+}
+
+// Show status message with optional error styling
+function showStatusMessage(message, isError) {
+    const statusElement = document.getElementById('buildStatus');
+    const messageElement = document.getElementById('statusMessage');
+    
+    messageElement.textContent = message;
+    statusElement.className = isError ? 'error' : '';
+    
+    statusElement.classList.add('show');
+    setTimeout(() => {
+        statusElement.classList.add('fade-out');
+        setTimeout(() => {
+            statusElement.classList.remove('show', 'fade-out');
+        }, 500);
+    }, 3000);
+}
+
+// Connect to drone
+function connectToDrone() {
+    const droneId = document.getElementById('droneId').value;
+    const password = document.getElementById('dronePassword').value;
+    
+    if (!droneId || !password) {
+        document.getElementById('droneStatus').textContent = 'Status: ID and password required';
+        return;
+    }
+    
+    document.getElementById('droneStatus').textContent = 'Status: Connecting...';
+    
+    // Simulate connection process
+    setTimeout(() => {
+        isConnected = true;
+        document.getElementById('connectionIndicator').classList.remove('bg-red-500');
+        document.getElementById('connectionIndicator').classList.add('bg-green-500');
+        document.getElementById('connectionStatus').textContent = 'Connected';
+        document.getElementById('droneStatus').textContent = 'Status: Connected';
+    }, 1500);
+}
+
+// Upload code to drone
+function uploadCode() {
+    if (!isConnected) {
+        document.getElementById('uploadStatus').textContent = 'Upload Status: Not connected';
+        return;
+    }
+    
+    if (!isBuilt) {
+        document.getElementById('uploadStatus').textContent = 'Upload Status: Build firmware first';
+        return;
+    }
+    
+    document.getElementById('uploadStatus').textContent = 'Upload Status: Uploading...';
+    const progressBar = document.getElementById('uploadProgress');
+    
+    // Simulate upload process
+    let progress = 0;
+    const uploadInterval = setInterval(() => {
+        progress += 5;
+        progressBar.value = progress;
+        
+        if (progress >= 100) {
+            clearInterval(uploadInterval);
+            document.getElementById('uploadStatus').textContent = 'Upload Status: Upload complete!';
+            
+            // Decrement free attempts if not premium
+            if (!hasValidLicense) {
+                freeAttempts--;
+                updateAttemptsCounter();
+            }
+        }
+    }, 200);
+}
+
+// Handle tab switching in reverse learning modal
+function setupDataTabs() {
+    const tabs = document.querySelectorAll('.data-tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.data-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            tab.classList.add('active');
+            
+            // Show corresponding content
+            const tabId = tab.getAttribute('data-tab');
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // Initialize charts if needed
+            if (tabId === 'trajectory' && !trajectoryChart) {
+                initTrajectoryChart();
+            } else if (tabId === 'planning' && !plannedTrajectoryChart) {
+                initPlannedTrajectoryChart();
+            }
+        });
+    });
+}
+
+// Generate a random license key
+function generateLicenseKey() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let key = 'AIRM-';
+    
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 4; j++) {
+            key += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        if (i < 2) key += '-';
+    }
+    
+    return key;
+}
+
+// Purchase flow functionality
+let currentPurchaseStep = 1;
+let paymentMethod = 'upi';
+let discountTimer = 300; // 5 minutes in seconds
+let resendTimer = 30; // 30 seconds
+
+function updatePurchaseProgress() {
+    // Update step indicators
+    for (let i = 1; i <= 4; i++) {
+        const step = document.getElementById(`step${i}`);
+        if (i < currentPurchaseStep) {
+            step.classList.remove('active');
+            step.classList.add('completed');
+        } else if (i === currentPurchaseStep) {
+            step.classList.add('active');
+            step.classList.remove('completed');
+        } else {
+            step.classList.remove('active', 'completed');
+        }
+    }
+    
+    // Update progress bar
+    const progress = ((currentPurchaseStep - 1) / 3) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+    
+    // Show/hide form sections
+    document.querySelectorAll('.form-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    document.getElementById(`formStep${currentPurchaseStep}`).classList.add('active');
+}
+
+function startDiscountTimer() {
+    const timerElement = document.getElementById('countdown');
+    
+    const timer = setInterval(() => {
+        const minutes = Math.floor(discountTimer / 60);
+        const seconds = discountTimer % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (discountTimer <= 0) {
+            clearInterval(timer);
+            document.querySelector('.price-tag').textContent = '1998';
+            document.querySelector('.discount-badge').style.display = 'none';
+            document.getElementById('discountTimer').textContent = 'Offer expired';
+        } else {
+            discountTimer--;
+        }
+    }, 1000);
+}
+
+function startResendTimer() {
+    const timerElement = document.getElementById('resendCountdown');
+    document.getElementById('resendTimer').style.display = 'inline';
+    document.getElementById('resendOtp').style.display = 'none';
+    
+    const timer = setInterval(() => {
+        timerElement.textContent = resendTimer;
+        
+        if (resendTimer <= 0) {
+            clearInterval(timer);
+            document.getElementById('resendTimer').style.display = 'none';
+            document.getElementById('resendOtp').style.display = 'inline';
+            resendTimer = 30;
+        } else {
+            resendTimer--;
+        }
+    }, 1000);
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function validatePhone(phone) {
+    const re = /^\+?\d{10,15}$/;
+    return re.test(phone);
+}
+
+function createConfetti() {
+    const container = document.querySelector('.purchase-container');
+    const colors = ['#00f0ff', '#ff3e7f', '#ffff00', '#10b981'];
+    
+    for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}%`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+        
+        // Random size
+        const size = Math.random() * 10 + 5;
+        confetti.style.width = `${size}px`;
+        confetti.style.height = `${size}px`;
+        
+        // Animation
+        confetti.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards, confetti-rotate ${Math.random() * 5 + 3}s linear infinite`;
+        confetti.style.animationDelay = `${Math.random() * 0.5}s`;
+        
+        container.appendChild(confetti);
+        
+        // Remove after animation
+        setTimeout(() => {
+            confetti.remove();
+        }, 5000);
+    }
+}
+
+// Initialize all event listeners
+function setupEventListeners() {
+    // Block selection
+    document.querySelectorAll('.block').forEach(block => {
+        block.addEventListener('click', function(e) {
+            if (isDragging) return;
+            
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastTapTime;
+            
+            if (lastTappedBlock === this && tapLength < 300) {
+                // Double tap - toggle selection
+                if (this.classList.contains('selected')) {
+                    this.classList.remove('selected');
+                    selectedBlocks = selectedBlocks.filter(b => b !== this);
+                } else {
+                    this.classList.add('selected');
+                    selectedBlocks.push(this);
+                }
+                updateArrows();
+                lastTapTime = 0;
+                lastTappedBlock = null;
+                clearTimeout(tapTimeout);
+            } else {
+                // Single tap - show modal after delay
+                lastTapTime = currentTime;
+                lastTappedBlock = this;
+                tapTimeout = setTimeout(() => {
+                    showModal(this);
+                    lastTapTime = 0;
+                    lastTappedBlock = null;
+                }, 300);
+            }
+        });
+    });
+    
+    // Modal close buttons
+    document.querySelectorAll('.close-modal').forEach(button => {
+        button.addEventListener('click', function() {
+            closeModal(this.closest('.modal').id);
+        });
+    });
+    
+    // Right-side buttons
+    document.getElementById('buildButton').addEventListener('click', buildFirmware);
+    document.getElementById('controlsButton').addEventListener('click', showControlsModal);
+    document.getElementById('connectButton').addEventListener('click', showConnectModal);
+    document.getElementById('tutorialButton').addEventListener('click', showTutorialModal);
+    document.getElementById('reverseLearningButton').addEventListener('click', showReverseLearningModal);
+    document.getElementById('licenseButton').addEventListener('click', showLicenseModal);
+    
+    // Connect modal buttons
+    document.getElementById('connectDroneButton').addEventListener('click', connectToDrone);
+    document.getElementById('uploadCodeButton').addEventListener('click', uploadCode);
+    
+    // Reverse learning modal elements
+    document.getElementById('dataType').addEventListener('change', updateDataDescription);
+    document.getElementById('generateGraph').addEventListener('click', generateGraph);
+    document.getElementById('zoomIn').addEventListener('click', zoomIn);
+    document.getElementById('zoomOut').addEventListener('click', zoomOut);
+    document.getElementById('exportData').addEventListener('click', exportData);
+    document.getElementById('exportTrajectory').addEventListener('click', exportTrajectoryData);
+    document.getElementById('uploadTrajectoryBtn').addEventListener('click', () => {
+        showStatusMessage('Trajectory uploaded to firmware', false);
+    });
+    
+    // Trajectory planning sliders
+    document.querySelectorAll('.control-slider input').forEach(slider => {
+        slider.addEventListener('input', function() {
+            const valueSpan = document.getElementById(`${this.id}Value`);
+            if (valueSpan) valueSpan.textContent = this.value;
+            updatePlannedTrajectory();
+        });
+    });
+    
+    // Purchase flow buttons
+    document.getElementById('nextBtn1').addEventListener('click', () => {
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        
+        if (!fullName || !email || !phone) {
+            alert('Please fill in all fields');
+            return;
+        }
+        
+        if (!validateEmail(email)) {
+            alert('Please enter a valid email address');
+            return;
+        }
+        
+        if (!validatePhone(phone)) {
+            alert('Please enter a valid phone number');
+            return;
+        }
+        
+        // Generate and send OTP (simulated)
+        otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`OTP for ${phone}: ${otp}`); // In real app, this would send via SMS
+        
+        currentPurchaseStep = 2;
+        updatePurchaseProgress();
+        startResendTimer();
+    });
+    
+    document.getElementById('backBtn2').addEventListener('click', () => {
+        currentPurchaseStep = 1;
+        updatePurchaseProgress();
+    });
+    
+    document.getElementById('nextBtn2').addEventListener('click', () => {
+        // Verify OTP
+        const enteredOtp = Array.from(document.querySelectorAll('.otp-input'))
+            .map(input => input.value)
+            .join('');
+        
+        if (enteredOtp.length !== 6) {
+            alert('Please enter the full 6-digit code');
+            return;
+        }
+        
+        if (enteredOtp !== otp) {
+            alert('Incorrect verification code');
+            return;
+        }
+        
+        currentPurchaseStep = 3;
+        updatePurchaseProgress();
+    });
+    
+    document.getElementById('resendOtp').addEventListener('click', (e) => {
+        e.preventDefault();
+        // Resend OTP
+        otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`New OTP for ${document.getElementById('phone').value}: ${otp}`);
+        startResendTimer();
+    });
+    
+    document.getElementById('backBtn3').addEventListener('click', () => {
+        currentPurchaseStep = 2;
+        updatePurchaseProgress();
+    });
+    
+    document.getElementById('nextBtn3').addEventListener('click', () => {
+        // Process payment (simulated)
+        setTimeout(() => {
+            generatedLicenseKey = generateLicenseKey();
+            document.getElementById('licenseKeyDisplay').textContent = generatedLicenseKey;
+            
+            currentPurchaseStep = 4;
+            updatePurchaseProgress();
+            createConfetti();
+            
+            // Activate premium features
+            hasValidLicense = true;
+            document.getElementById('connectionIndicator').classList.remove('bg-red-500');
+            document.getElementById('connectionIndicator').classList.add('bg-green-500');
+            document.getElementById('connectionStatus').textContent = 'Premium Active';
+            document.getElementById('attemptsCounter').style.display = 'none';
+        }, 1500);
+    });
+    
+    document.getElementById('finishBtn').addEventListener('click', () => {
+        closeModal('licenseModal');
+    });
+    
+    // Payment method selection
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', () => {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            option.classList.add('selected');
+            paymentMethod = option.getAttribute('data-method');
+            
+            document.querySelectorAll('.payment-method').forEach(method => method.style.display = 'none');
+            document.getElementById(`${paymentMethod}Payment`).style.display = 'block';
+        });
+    });
+    
+    // OTP input auto-focus
+    document.querySelectorAll('.otp-input').forEach((input, index) => {
+        input.addEventListener('input', () => {
+            if (input.value.length === 1 && index < 5) {
+                document.querySelector(`.otp-input[data-index="${index + 1}"]`).focus();
+            }
+        });
+        
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                document.querySelector(`.otp-input[data-index="${index - 1}"]`).focus();
+            }
+        });
+    });
+}
+
+// Initialize the application
+document.addEventListener('DOMContentLoaded', () => {
+    setupInteract();
+    setupEventListeners();
+    setupDataTabs();
+    initJoystick();
+    updateSliderValues();
+    updateAttemptsCounter();
+    startDiscountTimer();
+    
+    // Close modals when clicking outside content
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+});
